@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Design tokens — warm editorial palette from the design spec */
+@theme {
+  --font-serif: 'Spectral', Georgia, serif;
+
+  --color-bg: #f1e9d9;
+  --color-panel: #f6efe0;
+  --color-surface: #fcf8f0;
+  --color-ink: #2b2620;
+  --color-sub: #6e6457;
+  --color-faint: #a99c88;
+  --color-line: rgba(43, 38, 32, 0.11);
+  --color-line-strong: rgba(43, 38, 32, 0.2);
+  --color-accent: #b0532a;
+  --color-accent-ink: #7a3417;
+  --color-accent-soft: rgba(176, 83, 42, 0.1);
+  --color-accent-soft-2: rgba(176, 83, 42, 0.2);
+  --color-danger: #b23a2e;
+  --color-danger-soft: rgba(178, 58, 46, 0.1);
+  --color-user-bubble: #2b2620;
+  --color-user-ink: #fcf8f0;
+}
+
+/* iOS PWA safe-area base — see ref/ios-pwa-edge-to-edge-fix.md
+   height: 100vh is the ONLY correct value; 100% and 100dvh both break viewport-fit=cover */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: var(--font-serif);
+  background-color: var(--color-bg);
+}
+
+/* Hide all scrollbars globally — scrolling still works, just no visible track */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
