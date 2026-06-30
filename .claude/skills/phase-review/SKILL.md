@@ -23,7 +23,7 @@ Your role here is **reviewer only** — read code, report findings, do not edit 
 
 ## Step 0 — Load context
 
-Read the roadmap (wherever it lives — check `ROADMAP.md` or the project root). Extract the task list and milestone for Phase $ARGUMENTS. Note which phases precede it — you'll do a regression check on those too. Everything scoped to phases *after* $ARGUMENTS is out of scope; don't flag missing features that aren't due yet.
+Read the roadmap @.claude/plans/ROADMAP.md - Extract the task list and milestone for Phase $ARGUMENTS. Note which phases precede it — you'll do a regression check on those too. Everything scoped to phases *after* $ARGUMENTS is out of scope; don't flag missing features that aren't due yet.
 
 For the full feature and design contract, refer to:
 - `ref/PlayRecap-Feature-Spec.md` — features, data model, LLM context assembly, storage, offline behavior
