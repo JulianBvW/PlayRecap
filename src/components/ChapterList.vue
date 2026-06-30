@@ -15,7 +15,16 @@ defineExpose({ scrollContainerRef })
 </script>
 
 <template>
-  <div ref="scrollContainerRef">
+  <div
+    ref="scrollContainerRef"
+    style="
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    "
+  >
     <SeriesRecapEntry
       v-if="book.seriesRecap !== null"
       @open="emit('open-series-recap')"

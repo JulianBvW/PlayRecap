@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = withDefaults(
   defineProps<{
     cover: string | null
@@ -8,9 +10,9 @@ const props = withDefaults(
   { size: 46 },
 )
 
-const radius = props.size === 46 ? '9px' : '10px'
-const fontSize = props.size * 0.48 + 'px'
-const letter = props.title.charAt(0)
+const radius = computed(() => (props.size === 46 ? '9px' : '10px'))
+const fontSize = computed(() => props.size * 0.48 + 'px')
+const letter = computed(() => props.title.charAt(0))
 </script>
 
 <template>

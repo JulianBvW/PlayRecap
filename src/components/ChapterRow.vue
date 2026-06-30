@@ -87,7 +87,7 @@ const emit = defineEmits<{ 'open-chat': [] }>()
     <div style="padding: 7px 34px 19px 24px; display: flex; flex-direction: column; gap: 7px;">
       <div
         v-for="(bullet, i) in chapter.summary"
-        :key="i"
+        :key="bullet + i"
         style="display: flex; gap: 8px; align-items: flex-start;"
       >
         <span

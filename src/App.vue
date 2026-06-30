@@ -47,18 +47,23 @@ const activeBook = computed(() => booksStore.activeBook)
   z-index: 0;
 }
 
+/* Flex column so TopBar takes natural height and ChapterList fills the rest.
+   ChapterList owns the overflow-y scroll — scrollContainerRef is the true scroll container. */
 .app-scroll {
   position: fixed;
   inset: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
   z-index: 1;
 }
 
-/* Interactive content respects safe areas — background extends to physical edges, content does not */
+/* Fills app-scroll; safe-area sides + top applied here, bottom delegated to ChapterList. */
 .app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }

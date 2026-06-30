@@ -13,20 +13,15 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'open-switcher': [] }>()
 
-const progress = computed(
-  () => ((props.currentChapterIndex + 1) / props.book.chapters.length) * 100,
-)
+const progress = computed(() => {
+  const total = props.book.chapters.length
+  if (total === 0) return 0
+  return ((props.currentChapterIndex + 1) / total) * 100
+})
 </script>
 
 <template>
-  <div
-    style="
-      position: sticky;
-      top: env(safe-area-inset-top, 0px);
-      z-index: 2;
-      background: var(--color-bg);
-    "
-  >
+  <div style="background: var(--color-bg);">
     <button
       style="
         width: 100%;
