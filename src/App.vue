@@ -1,4 +1,17 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted, computed } from 'vue'
+import { useBooksStore } from '@/stores/books'
+import FirstRunScreen from '@/components/FirstRunScreen.vue'
+import TopBar from '@/components/TopBar.vue'
+import ChapterList from '@/components/ChapterList.vue'
+
+const booksStore = useBooksStore()
+
+onMounted(() => booksStore.init())
+
+const hasBooks = computed(() => booksStore.sortedBooks.length > 0)
+const activeBook = computed(() => booksStore.activeBook)
+</script>
 
 <template>
   <!-- Full-bleed background: fixed + opaque so it covers all safe areas (notch, home indicator).
@@ -9,7 +22,19 @@
        Prevents rubber-band overscroll from exposing the native UIScrollView background. -->
   <div class="app-scroll">
     <div class="app-content">
-      <!-- views render here -->
+      <FirstRunScreen v-if="!hasBooks" />
+      <template v-else>
+        <TopBar
+          :book="activeBook!"
+          :current-chapter-index="0"
+          @open-switcher="() => {}"
+        />
+        <ChapterList
+          :book="activeBook!"
+          @open-chat="() => {}"
+          @open-series-recap="() => {}"
+        />
+      </template>
     </div>
   </div>
 </template>
