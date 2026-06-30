@@ -11,7 +11,8 @@ const emit = defineEmits<{
 }>()
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
-defineExpose({ scrollContainerRef })
+const rowRefs = ref<(HTMLElement | null)[]>([])
+defineExpose({ scrollContainerRef, rowRefs })
 </script>
 
 <template>
@@ -34,6 +35,7 @@ defineExpose({ scrollContainerRef })
       v-for="ch in book.chapters"
       :key="ch.index"
       :chapter="ch"
+      :ref="(el) => { rowRefs[ch.index] = el ? (el as any).$el : null }"
       @open-chat="emit('open-chat', ch.index)"
     />
 
