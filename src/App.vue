@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { useBooksStore } from '@/stores/books'
 import FirstRunScreen from '@/components/FirstRunScreen.vue'
 import TopBar from '@/components/TopBar.vue'
@@ -11,6 +11,11 @@ onMounted(() => booksStore.init())
 
 const hasBooks = computed(() => booksStore.sortedBooks.length > 0)
 const activeBook = computed(() => booksStore.activeBook)
+const currentChapterIndex = ref(0)
+
+function onChapterChanged(i: number) {
+  currentChapterIndex.value = i
+}
 </script>
 
 <template>
@@ -26,13 +31,14 @@ const activeBook = computed(() => booksStore.activeBook)
       <template v-else>
         <TopBar
           :book="activeBook!"
-          :current-chapter-index="0"
+          :current-chapter-index="currentChapterIndex"
           @open-switcher="() => {}"
         />
         <ChapterList
           :book="activeBook!"
           @open-chat="() => {}"
           @open-series-recap="() => {}"
+          @chapter-changed="onChapterChanged"
         />
       </template>
     </div>

@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { Ref } from 'vue'
 import { buildRailSubset } from '@/utils/rail'
 
 const props = defineProps<{
   totalChapters: number
   currentChapterIndex: number
-  rowRefs: Ref<(HTMLElement | null)[]>
-  scrollContainer: Ref<HTMLElement | null>
+  rowRefs: (HTMLElement | null)[]
+  scrollContainer: HTMLElement | null
 }>()
 
 const ticks = computed(() => buildRailSubset(props.totalChapters))
@@ -27,8 +26,8 @@ const dragChapterNumber = ref(0)
 const dragOffsetY = ref(0)
 
 function scrollToChapterIndex(chapterIndex: number) {
-  const row = props.rowRefs.value[chapterIndex]
-  const container = props.scrollContainer.value
+  const row = props.rowRefs[chapterIndex]
+  const container = props.scrollContainer
   if (!row || !container) return
   container.scrollTop = row.offsetTop + row.offsetHeight - container.clientHeight
 }
