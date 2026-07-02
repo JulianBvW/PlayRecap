@@ -3,7 +3,7 @@ import type { Chapter } from '@/types/library'
 import { formatStartTime } from '@/utils/time'
 
 defineProps<{ chapter: Chapter }>()
-const emit = defineEmits<{ 'open-chat': [] }>()
+const emit = defineEmits<{ 'open-chat': [chapterIndex: number] }>()
 </script>
 
 <template>
@@ -61,7 +61,7 @@ const emit = defineEmits<{ 'open-chat': [] }>()
           box-shadow: 0 1px 2px rgba(43,38,32,0.06);
           padding: 0;
         "
-        @click="emit('open-chat')"
+        @click="emit('open-chat', chapter.index)"
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
