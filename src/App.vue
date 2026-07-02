@@ -4,6 +4,7 @@ import { useBooksStore } from '@/stores/books'
 import FirstRunScreen from '@/components/FirstRunScreen.vue'
 import TopBar from '@/components/TopBar.vue'
 import ChapterList from '@/components/ChapterList.vue'
+import BookSwitcherSheet from '@/components/BookSwitcherSheet.vue'
 
 const booksStore = useBooksStore()
 
@@ -12,6 +13,8 @@ onMounted(() => booksStore.init())
 const hasBooks = computed(() => booksStore.sortedBooks.length > 0)
 const activeBook = computed(() => booksStore.activeBook)
 const currentChapterIndex = ref(0)
+const showSwitcher = ref(false)
+const showSettings = ref(false)
 
 function onChapterChanged(i: number) {
   currentChapterIndex.value = i
@@ -32,7 +35,7 @@ function onChapterChanged(i: number) {
         <TopBar
           :book="activeBook!"
           :current-chapter-index="currentChapterIndex"
-          @open-switcher="() => {}"
+          @open-switcher="showSwitcher = true"
         />
         <ChapterList
           :book="activeBook!"
@@ -43,6 +46,12 @@ function onChapterChanged(i: number) {
       </template>
     </div>
   </div>
+
+  <BookSwitcherSheet
+    v-model="showSwitcher"
+    @open-settings="showSwitcher = false; showSettings = true"
+  />
+  <!-- SettingsSheet — added in Step 3 -->
 </template>
 
 <style scoped>
