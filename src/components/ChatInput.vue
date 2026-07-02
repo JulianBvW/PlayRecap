@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{ chapterCount: number }>()
-const emit = defineEmits<{ send: [text: string, speechMode: boolean] }>()
+const props = defineProps<{ chapterCount: number; speechMode: boolean }>()
+const emit = defineEmits<{
+  send: [text: string, speechMode: boolean]
+  'update:speechMode': [value: boolean]
+}>()
 
 const draft = ref('')
-const speechMode = ref(false)
 
 function onSend() {
   if (!draft.value.trim()) return
-  emit('send', draft.value.trim(), speechMode.value)
+  emit('send', draft.value.trim(), props.speechMode)
   draft.value = ''
 }
 </script>
@@ -43,7 +45,7 @@ function onSend() {
         flexShrink: '0',
         padding: '0',
       }"
-      @click="speechMode = !speechMode"
+      @click="emit('update:speechMode', !speechMode)"
     >
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
         <rect x="6" y="1" width="6" height="10" rx="3"

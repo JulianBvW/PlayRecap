@@ -43,7 +43,7 @@ const segments = computed<Segment[]>(() => {
     <template v-for="(seg, i) in segments" :key="i">
       <p
         v-if="seg.type === 'heading'"
-        style="font-size: 14px; font-weight: 700; color: var(--color-ink); margin: 12px 0 4px;"
+        style="font-size: 18px; font-weight: 600; color: var(--color-ink); margin: 12px 0 4px;"
       >{{ seg.text }}</p>
 
       <div

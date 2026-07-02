@@ -8,7 +8,7 @@ describe('MarkdownRenderer', () => {
     const p = wrapper.find('p')
     expect(p.exists()).toBe(true)
     expect(p.text()).toContain('Meine Überschrift')
-    expect(p.attributes('style')).toContain('font-weight: 700')
+    expect(p.attributes('style')).toContain('font-weight: 600')
   })
 
   it('renders **bold** as strong element', () => {

@@ -3,12 +3,11 @@ defineProps<{ chapterCount: number }>()
 const emit = defineEmits<{ send: [text: string] }>()
 
 const chips = [
-  'Fasse die wichtigsten Ereignisse zusammen',
-  'Wer sind die Hauptfiguren?',
-  'Was war der wichtigste Wendepunkt?',
+  'Bis hier zusammenfassen',
+  'Figuren auflisten',
+  'Wichtigste Wendungen',
 ]
-const chipsAlways = chips
-const chipConditional = 'Letzte 3 Kapitel zusammenfassen'
+const chipConditional = 'Letzte 3 Kapitel'
 </script>
 
 <template>
@@ -23,9 +22,9 @@ const chipConditional = 'Letzte 3 Kapitel zusammenfassen'
   >
     <p
       style="
-        font-size: 18px;
-        font-weight: 500;
-        color: var(--color-sub);
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--color-ink);
         font-family: var(--font-serif);
         margin: 0;
         text-align: center;
@@ -41,13 +40,13 @@ const chipConditional = 'Letzte 3 Kapitel zusammenfassen'
       "
     >
       <button
-        v-for="chip in chipsAlways"
+        v-for="chip in chips"
         :key="chip"
         style="
           border: 1px solid var(--color-line);
           background: var(--color-surface);
-          color: var(--color-sub);
-          border-radius: 20px;
+          color: var(--color-ink);
+          border-radius: 999px;
           padding: 8px 16px;
           font-size: 14px;
           font-family: var(--font-serif);
@@ -61,8 +60,8 @@ const chipConditional = 'Letzte 3 Kapitel zusammenfassen'
         style="
           border: 1px solid var(--color-line);
           background: var(--color-surface);
-          color: var(--color-sub);
-          border-radius: 20px;
+          color: var(--color-ink);
+          border-radius: 999px;
           padding: 8px 16px;
           font-size: 14px;
           font-family: var(--font-serif);
