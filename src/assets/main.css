@@ -50,6 +50,26 @@ body {
 .prc-backdrop       { animation: prc-fade .3s ease forwards; }
 .prc-backdrop--out  { animation: prc-fade .25s ease reverse forwards; }
 
+@keyframes prc-sin {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes prc-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-4px); opacity: 1; }
+}
+@keyframes prc-eq {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1); }
+}
+@keyframes prc-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+.prc-chat       { animation: prc-sin .34s cubic-bezier(.22,1,.36,1) forwards; }
+.prc-chat--out  { animation: prc-sin .3s ease-in reverse forwards; }
+
 /* Hide all scrollbars globally — scrolling still works, just no visible track */
 * {
   scrollbar-width: none;

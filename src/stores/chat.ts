@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import { defineStore } from 'pinia'
-import type { Message } from '@/types/library'
+import type { Message, MessageFormat } from '@/types/library'
 
 export const useChatStore = defineStore('chat', () => {
   // Keyed by `${bookId}:${chapterIndex}`. Never written to IndexedDB.
@@ -35,5 +35,24 @@ export const useChatStore = defineStore('chat', () => {
     threads.delete(threadKey(bookId, chapterIndex))
   }
 
-  return { threads, getThread, addMessage, updateLastMessage, clearThread }
+  function sendMessage(
+    bookId: string,
+    chapterIndex: number,
+    text: string,
+    speechMode: boolean,
+  ): void {
+    const format: MessageFormat = speechMode ? 'prose' : 'markdown'
+    addMessage(bookId, chapterIndex, { role: 'user', content: text, format, status: 'done' })
+    addMessage(bookId, chapterIndex, { role: 'assistant', content: '', format, status: 'thinking' })
+    setTimeout(() => {
+      updateLastMessage(bookId, chapterIndex, {
+        content: speechMode
+          ? `Dies ist eine simulierte Prosa-Antwort für Kapitel ${chapterIndex + 1}.`
+          : `### Simulierte Antwort\n\nDies ist eine **simulierte** Antwort.\n\n- Punkt eins\n- Punkt zwei`,
+        status: 'done',
+      })
+    }, 600)
+  }
+
+  return { threads, getThread, addMessage, updateLastMessage, clearThread, sendMessage }
 })
