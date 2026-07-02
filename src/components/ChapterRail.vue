@@ -29,7 +29,12 @@ function scrollToChapterIndex(chapterIndex: number) {
   const row = props.rowRefs[chapterIndex]
   const container = props.scrollContainer
   if (!row || !container) return
-  container.scrollTop = row.offsetTop + row.offsetHeight - container.clientHeight
+  // Chapter 1 (index 0): top-align so SeriesRecapEntry above it stays hidden
+  if (chapterIndex === 0) {
+    container.scrollTop = row.offsetTop
+  } else {
+    container.scrollTop = row.offsetTop + row.offsetHeight - container.clientHeight
+  }
 }
 
 function getTickIndexAtY(clientY: number): number {

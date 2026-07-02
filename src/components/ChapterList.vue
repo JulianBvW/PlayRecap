@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import type { BookRecord } from '@/types/library'
 import ChapterRow from '@/components/ChapterRow.vue'
 import SeriesRecapEntry from '@/components/SeriesRecapEntry.vue'
@@ -7,7 +7,7 @@ import ScrollHighlight from '@/components/ScrollHighlight.vue'
 import ChapterRail from '@/components/ChapterRail.vue'
 import { useScrollSpy } from '@/composables/useScrollSpy'
 
-defineProps<{ book: BookRecord }>()
+const props = defineProps<{ book: BookRecord }>()
 const emit = defineEmits<{
   'open-chat': [chapterIndex: number]
   'open-series-recap': []
@@ -20,25 +20,33 @@ defineExpose({ scrollContainerRef, rowRefs })
 
 const { currentChapterIndex } = useScrollSpy(scrollContainerRef, rowRefs)
 
-const highlightTop = ref(0)
-const highlightHeight = ref(0)
-const shouldAnimate = ref(false)
+// Static highlights on every 10th chapter (indices 9, 19, 29 …)
+const tenthIndices = computed(() =>
+  props.book.chapters.map((_, i) => i).filter(i => (i + 1) % 10 === 0),
+)
 
-onMounted(() => {
-  const row = rowRefs.value[0]
-  if (row) {
-    highlightTop.value = row.offsetTop
-    highlightHeight.value = row.offsetHeight
-  }
+type HighlightPos = { top: number; height: number }
+const staticHighlights = ref<HighlightPos[]>([])
+
+function computeStaticHighlights() {
+  staticHighlights.value = tenthIndices.value.map(i => {
+    const row = rowRefs.value[i]
+    return row ? { top: row.offsetTop, height: row.offsetHeight } : { top: 0, height: 0 }
+  })
+}
+
+onMounted(async () => {
+  await nextTick()
+  computeStaticHighlights()
 })
 
-watch(currentChapterIndex, (newIdx, oldIdx) => {
-  shouldAnimate.value = Math.abs(newIdx - oldIdx) <= 1
-  const row = rowRefs.value[newIdx]
-  if (row) {
-    highlightTop.value = row.offsetTop
-    highlightHeight.value = row.offsetHeight
-  }
+watch(() => props.book.id, async () => {
+  await nextTick()
+  if (scrollContainerRef.value) scrollContainerRef.value.scrollTop = 0
+  computeStaticHighlights()
+})
+
+watch(currentChapterIndex, (newIdx) => {
   emit('chapter-changed', newIdx)
 })
 </script>
@@ -56,7 +64,13 @@ watch(currentChapterIndex, (newIdx, oldIdx) => {
         padding-bottom: env(safe-area-inset-bottom, 0px);
       "
     >
-      <ScrollHighlight :top="highlightTop" :height="highlightHeight" :animate="shouldAnimate" />
+      <ScrollHighlight
+        v-for="(pos, i) in staticHighlights"
+        :key="i"
+        :top="pos.top"
+        :height="pos.height"
+        :animate="false"
+      />
 
       <SeriesRecapEntry
         v-if="book.seriesRecap !== null"

@@ -8,6 +8,7 @@ import TopBar from '@/components/TopBar.vue'
 import ChapterList from '@/components/ChapterList.vue'
 import BookSwitcherSheet from '@/components/BookSwitcherSheet.vue'
 import SettingsSheet from '@/components/SettingsSheet.vue'
+import SeriesRecapSheet from '@/components/SeriesRecapSheet.vue'
 
 const booksStore = useBooksStore()
 const settingsStore = useSettingsStore()
@@ -23,6 +24,7 @@ const currentChapterIndex = ref(0)
 const showSwitcher = ref(false)
 const showSettings = ref(false)
 const showChat = ref(false)
+const showSeriesRecap = ref(false)
 const chatChapterIndex = ref(0)
 
 function onChapterChanged(i: number) {
@@ -54,7 +56,7 @@ function onOpenChat(i: number) {
         <ChapterList
           :book="activeBook!"
           @open-chat="onOpenChat"
-          @open-series-recap="() => {}"
+          @open-series-recap="showSeriesRecap = true"
           @chapter-changed="onChapterChanged"
         />
       </template>
@@ -66,6 +68,7 @@ function onOpenChat(i: number) {
     @open-settings="showSwitcher = false; showSettings = true"
   />
   <SettingsSheet v-model="showSettings" />
+  <SeriesRecapSheet v-model="showSeriesRecap" />
   <ChatSheet
     v-model="showChat"
     :book-id="activeBook?.id ?? ''"

@@ -209,7 +209,7 @@ async function doConfirmClear() {
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <rect x="2" y="2" width="10" height="14" rx="1.5" stroke="var(--color-accent)" stroke-width="1.5" />
-            <path d="M14 7v6M11 10h6" stroke="var(--color-accent)" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M7 6v6M4 9h6" stroke="var(--color-accent)" stroke-width="1.5" stroke-linecap="round" />
           </svg>
         </div>
         <span style="font-size: 16px; color: var(--color-ink);">Bücher hinzufügen</span>
@@ -313,7 +313,7 @@ async function doConfirmClear() {
           "
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M3 5h12M7 5V3h4v2M6 5l1 10h4l1-10" stroke="var(--color-danger)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M3 5h12M7 5V3h4v2M6 5l1 10h4l1-10" stroke="var(--color-danger)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </div>
         <span style="font-size: 16px; color: var(--color-danger);">Alle Daten löschen</span>
