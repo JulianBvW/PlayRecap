@@ -1,25 +1,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useBooksStore } from '@/stores/books'
-import type { Book } from '@/types/library'
+import { validateLibraryFile } from '@/utils/validateLibrary'
 
 const booksStore = useBooksStore()
 const fileInput = ref<HTMLInputElement | null>(null)
+const fileError = ref('')
 
-function onFileChange(event: Event) {
+async function onFileChange(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
-
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target?.result as string) as { books: Book[] }
-      booksStore.upsertBooks(data.books)
-    } catch {
-      // Phase 4 adds proper validation and error display
-    }
+  try {
+    const data = validateLibraryFile(JSON.parse(await file.text()))
+    await booksStore.upsertBooks(data.books)
+    fileError.value = ''
+  } catch (e) {
+    fileError.value = (e as Error).message
   }
-  reader.readAsText(file)
+  ;(event.target as HTMLInputElement).value = ''
 }
 </script>
 
@@ -50,6 +48,11 @@ function onFileChange(event: Event) {
     >
       Daten importieren
     </button>
+
+    <p
+      v-if="fileError"
+      style="font-size: 13px; color: var(--color-danger); margin-top: 12px;"
+    >{{ fileError }}</p>
 
     <input
       ref="fileInput"

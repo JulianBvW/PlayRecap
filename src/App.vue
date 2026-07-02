@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
 import { useBooksStore } from '@/stores/books'
+import { useSettingsStore } from '@/stores/settings'
 import FirstRunScreen from '@/components/FirstRunScreen.vue'
 import TopBar from '@/components/TopBar.vue'
 import ChapterList from '@/components/ChapterList.vue'
 import BookSwitcherSheet from '@/components/BookSwitcherSheet.vue'
+import SettingsSheet from '@/components/SettingsSheet.vue'
 
 const booksStore = useBooksStore()
+const settingsStore = useSettingsStore()
 
-onMounted(() => booksStore.init())
+onMounted(() => {
+  booksStore.init()
+  settingsStore.init()
+})
 
 const hasBooks = computed(() => booksStore.sortedBooks.length > 0)
 const activeBook = computed(() => booksStore.activeBook)
@@ -51,7 +57,7 @@ function onChapterChanged(i: number) {
     v-model="showSwitcher"
     @open-settings="showSwitcher = false; showSettings = true"
   />
-  <!-- SettingsSheet — added in Step 3 -->
+  <SettingsSheet v-model="showSettings" />
 </template>
 
 <style scoped>
