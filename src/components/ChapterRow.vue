@@ -65,8 +65,11 @@ const emit = defineEmits<{ 'open-chat': [chapterIndex: number] }>()
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
-            d="M13 1H3C2.45 1 2 1.45 2 2v8c0 .55.45 1 1 1h2v2.5l3-2.5h5c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1z"
-            fill="var(--color-accent)"
+            d="M4 1.5h8a2.5 2.5 0 0 1 2.5 2.5v4a2.5 2.5 0 0 1-2.5 2.5H9l-3 3v-3H4A2.5 2.5 0 0 1 1.5 8V4A2.5 2.5 0 0 1 4 1.5z"
+            stroke="var(--color-accent)"
+            stroke-width="1.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           />
         </svg>
       </button>

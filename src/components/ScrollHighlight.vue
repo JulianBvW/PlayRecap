@@ -12,7 +12,7 @@ const style = computed(() => ({
   left: '8px',
   right: '6px',
   borderRadius: '14px',
-  background: 'var(--color-accent-soft)',
+  background: 'transparent',
   zIndex: '0',
   pointerEvents: 'none' as const,
   top: props.top + 'px',

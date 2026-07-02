@@ -56,12 +56,13 @@ function onOpenSettings() {
         <button
           aria-label="Einstellungen öffnen"
           style="
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: transparent;
+            background: var(--color-panel);
             border: none;
             cursor: pointer;
             padding: 0;

@@ -78,15 +78,18 @@ const progress = computed(() => {
       </svg>
     </button>
 
-    <div style="width: 100%; height: 3px; background: var(--color-line);">
-      <div
-        :style="{
-          height: '100%',
-          background: 'var(--color-accent)',
-          width: progress + '%',
-          transition: 'width .3s ease',
-        }"
-      />
+    <div style="padding: 0 18px;">
+      <div style="width: 100%; height: 3px; background: var(--color-line); border-radius: 2px;">
+        <div
+          :style="{
+            height: '100%',
+            background: 'var(--color-accent)',
+            width: progress + '%',
+            transition: 'width .3s ease',
+            borderRadius: '2px',
+          }"
+        />
+      </div>
     </div>
   </div>
 </template>

@@ -19,6 +19,7 @@ const booksStore = useBooksStore()
 const { activeBook } = storeToRefs(booksStore)
 
 const isClosing = ref(false)
+const speechMode = ref(false)
 
 watch(
   () => props.modelValue,
@@ -34,8 +35,12 @@ watch(
 
 const thread = computed(() => chatStore.getThread(props.bookId, props.chapterIndex))
 
-function onSend(text: string, speechMode: boolean) {
-  chatStore.sendMessage(props.bookId, props.chapterIndex, text, speechMode)
+function onSend(text: string, mode: boolean) {
+  chatStore.sendMessage(props.bookId, props.chapterIndex, text, mode)
+}
+
+function onChipSend(text: string) {
+  onSend(text, speechMode.value)
 }
 </script>
 
@@ -66,13 +71,18 @@ function onSend(text: string, speechMode: boolean) {
           flex-direction: column;
         "
       >
+        <!-- Grab handle -->
+        <div style="display: flex; justify-content: center; padding: 12px 0 4px;">
+          <div style="width: 38px; height: 4px; border-radius: 2px; background: var(--color-line-strong);" />
+        </div>
+
         <!-- Header -->
         <div
           style="
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 16px 20px 12px;
+            align-items: flex-start;
+            padding: 4px 20px 12px;
             flex-shrink: 0;
             position: relative;
             border-bottom: 1px solid var(--color-line);
@@ -95,9 +105,10 @@ function onSend(text: string, speechMode: boolean) {
               right: 16px;
               top: 50%;
               transform: translateY(-50%);
-              width: 36px;
-              height: 36px;
-              background: transparent;
+              width: 34px;
+              height: 34px;
+              border-radius: 50%;
+              background: var(--color-panel);
               border: none;
               cursor: pointer;
               display: flex;
@@ -110,7 +121,7 @@ function onSend(text: string, speechMode: boolean) {
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               <path
                 d="M4 4L14 14M14 4L4 14"
-                stroke="var(--color-faint)"
+                stroke="var(--color-sub)"
                 stroke-width="1.75"
                 stroke-linecap="round"
               />
@@ -123,7 +134,7 @@ function onSend(text: string, speechMode: boolean) {
           <ChatEmpty
             v-if="!thread.length"
             :chapter-count="activeBook?.chapters.length ?? 0"
-            @send="(text) => onSend(text, false)"
+            @send="onChipSend"
           />
           <ChatMessage
             v-for="(msg, i) in thread"
@@ -135,6 +146,7 @@ function onSend(text: string, speechMode: boolean) {
         <!-- Input -->
         <ChatInput
           :chapter-count="activeBook?.chapters.length ?? 0"
+          v-model:speech-mode="speechMode"
           @send="onSend"
         />
       </div>

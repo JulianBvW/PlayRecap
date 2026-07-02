@@ -102,12 +102,13 @@ async function doConfirmClear() {
         <button
           aria-label="Einstellungen schließen"
           style="
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: transparent;
+            background: var(--color-panel);
             border: none;
             cursor: pointer;
             padding: 0;
@@ -117,7 +118,7 @@ async function doConfirmClear() {
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
             <path
               d="M4 4L14 14M14 4L4 14"
-              stroke="var(--color-faint)"
+              stroke="var(--color-sub)"
               stroke-width="1.75"
               stroke-linecap="round"
             />
