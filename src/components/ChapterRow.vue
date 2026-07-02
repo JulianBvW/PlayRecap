@@ -7,7 +7,7 @@ const emit = defineEmits<{ 'open-chat': [] }>()
 </script>
 
 <template>
-  <div>
+  <div style="position: relative; z-index: 1;">
     <hr
       style="
         height: 1px;

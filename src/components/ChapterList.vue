@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import type { BookRecord } from '@/types/library'
 import ChapterRow from '@/components/ChapterRow.vue'
 import SeriesRecapEntry from '@/components/SeriesRecapEntry.vue'
@@ -23,6 +23,14 @@ const { currentChapterIndex } = useScrollSpy(scrollContainerRef, rowRefs)
 const highlightTop = ref(0)
 const highlightHeight = ref(0)
 const shouldAnimate = ref(false)
+
+onMounted(() => {
+  const row = rowRefs.value[0]
+  if (row) {
+    highlightTop.value = row.offsetTop
+    highlightHeight.value = row.offsetHeight
+  }
+})
 
 watch(currentChapterIndex, (newIdx, oldIdx) => {
   shouldAnimate.value = Math.abs(newIdx - oldIdx) <= 1

@@ -76,7 +76,7 @@ function onPointerUp() {
   isDragging.value = false
 }
 
-const bubbleTop = computed(() => Math.max(0, dragOffsetY.value - 10) + 'px')
+const bubbleTop = computed(() => Math.max(0, dragOffsetY.value - 31) + 'px')
 </script>
 
 <template>
@@ -87,7 +87,7 @@ const bubbleTop = computed(() => Math.max(0, dragOffsetY.value - 10) + 'px')
       right: 0;
       top: 0;
       bottom: 0;
-      width: 28px;
+      width: 22px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -122,17 +122,22 @@ const bubbleTop = computed(() => Math.max(0, dragOffsetY.value - 10) + 'px')
       v-if="isDragging"
       :style="{
         position: 'absolute',
-        right: '28px',
+        right: '22px',
         top: bubbleTop,
+        width: '62px',
+        height: '62px',
         background: 'var(--color-accent)',
         color: 'var(--color-surface)',
-        fontSize: '11px',
+        fontSize: '26px',
         fontWeight: '600',
-        borderRadius: '8px',
-        padding: '4px 8px',
+        fontFamily: 'Georgia, serif',
+        borderRadius: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         pointerEvents: 'none',
-        whiteSpace: 'nowrap',
         lineHeight: '1',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
       }"
     >{{ dragChapterNumber }}</div>
   </div>
