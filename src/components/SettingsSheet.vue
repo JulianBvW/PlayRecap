@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useBooksStore } from '@/stores/books'
 import { useSettingsStore } from '@/stores/settings'
 import { validateLibraryFile } from '@/utils/validateLibrary'
@@ -12,6 +12,8 @@ const booksStore = useBooksStore()
 const settingsStore = useSettingsStore()
 
 const apiKeyDraft = ref(settingsStore.apiKey)
+watch(() => settingsStore.apiKey, (val) => { apiKeyDraft.value = val }, { immediate: true })
+
 const fileMode = ref<'upsert' | 'import'>('upsert')
 const fileError = ref('')
 const confirmingClear = ref(false)
@@ -20,6 +22,7 @@ const filePicker = ref<HTMLInputElement | null>(null)
 function close() {
   emit('update:modelValue', false)
   confirmingClear.value = false
+  fileError.value = ''
 }
 
 function triggerPicker(mode: 'upsert' | 'import') {
@@ -56,8 +59,13 @@ function handleClear() {
 }
 
 async function doConfirmClear() {
-  await booksStore.clearAll()
-  close()
+  try {
+    await booksStore.clearAll()
+    close()
+  } catch (e) {
+    fileError.value = (e as Error).message
+    confirmingClear.value = false
+  }
 }
 </script>
 
