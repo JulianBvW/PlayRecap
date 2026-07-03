@@ -69,7 +69,14 @@ export const useChatStore = defineStore('chat', () => {
     addMessage(bookId, chapterIndex, { role: 'assistant', content: '', format, status: 'thinking' })
 
     try {
-      const book = booksStore.activeBook!
+      const book = booksStore.activeBook
+      if (!book) {
+        updateLastMessage(bookId, chapterIndex, {
+          content: 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+          status: 'error',
+        })
+        return
+      }
       const systemPrompt = buildSystemPrompt(book, chapterIndex)
       const messages = buildMessages(history, text, speechMode, systemPrompt)
 
@@ -81,11 +88,12 @@ export const useChatStore = defineStore('chat', () => {
         if (!last) break
         updateLastMessage(bookId, chapterIndex, { content: last.content + token })
       }
-      if (!signal?.aborted) {
-        updateLastMessage(bookId, chapterIndex, { status: 'done' })
-      }
+      updateLastMessage(bookId, chapterIndex, { status: 'done' })
     } catch {
-      if (signal?.aborted) return
+      if (signal?.aborted) {
+        updateLastMessage(bookId, chapterIndex, { status: 'done' })
+        return
+      }
       updateLastMessage(bookId, chapterIndex, {
         content: 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
         status: 'error',
