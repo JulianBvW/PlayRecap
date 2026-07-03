@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
 import { useBooksStore } from '@/stores/books'
@@ -35,13 +35,21 @@ watch(
 
 const thread = computed(() => chatStore.getThread(props.bookId, props.chapterIndex))
 
+let activeController: AbortController | null = null
+
 function onSend(text: string, mode: boolean) {
-  chatStore.sendMessage(props.bookId, props.chapterIndex, text, mode)
+  activeController?.abort()
+  activeController = new AbortController()
+  chatStore.sendMessage(props.bookId, props.chapterIndex, text, mode, activeController.signal)
 }
 
 function onChipSend(text: string) {
   onSend(text, speechMode.value)
 }
+
+onUnmounted(() => {
+  activeController?.abort()
+})
 </script>
 
 <template>
