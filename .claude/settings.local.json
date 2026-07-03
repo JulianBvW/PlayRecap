@@ -12,7 +12,8 @@
       "Bash(source ~/.nvm/nvm.sh && ./node_modules/.bin/vue-tsc --noEmit 2>&1)",
       "Bash(source ~/.nvm/nvm.sh && git diff --name-only HEAD && echo \"---\" && git status --short && echo \"---\" && git diff --stat HEAD)",
       "Bash(source ~/.nvm/nvm.sh && git diff HEAD)",
-      "Skill(deep-research)"
+      "Skill(deep-research)",
+      "Workflow(deep-research)"
     ]
   }
 }

@@ -1,6 +1,10 @@
 import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 import type { Message, MessageFormat } from '@/types/library'
+import { useSettingsStore } from '@/stores/settings'
+import { useBooksStore } from '@/stores/books'
+import { buildSystemPrompt, buildMessages } from '@/llm/context'
+import { streamChat } from '@/llm/mistral'
 
 export const useChatStore = defineStore('chat', () => {
   // Keyed by `${bookId}:${chapterIndex}`. Never written to IndexedDB.
@@ -35,23 +39,58 @@ export const useChatStore = defineStore('chat', () => {
     threads.delete(threadKey(bookId, chapterIndex))
   }
 
-  function sendMessage(
+  async function sendMessage(
     bookId: string,
     chapterIndex: number,
     text: string,
     speechMode: boolean,
-  ): void {
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const settingsStore = useSettingsStore()
+    const booksStore = useBooksStore()
     const format: MessageFormat = speechMode ? 'prose' : 'markdown'
+
+    if (!settingsStore.apiKey) {
+      addMessage(bookId, chapterIndex, { role: 'user', content: text, format, status: 'done' })
+      addMessage(bookId, chapterIndex, {
+        role: 'assistant',
+        content: 'Bitte füge einen API-Schlüssel in den Einstellungen hinzu.',
+        format,
+        status: 'error',
+      })
+      return
+    }
+
+    const history = getThread(bookId, chapterIndex)
+      .filter((m) => m.status === 'done')
+      .map((m) => ({ role: m.role, content: m.content }))
+
     addMessage(bookId, chapterIndex, { role: 'user', content: text, format, status: 'done' })
     addMessage(bookId, chapterIndex, { role: 'assistant', content: '', format, status: 'thinking' })
-    setTimeout(() => {
+
+    try {
+      const book = booksStore.activeBook!
+      const systemPrompt = buildSystemPrompt(book, chapterIndex)
+      const messages = buildMessages(history, text, speechMode, systemPrompt)
+
+      updateLastMessage(bookId, chapterIndex, { status: 'streaming' })
+      for await (const token of streamChat(messages, settingsStore.apiKey, signal)) {
+        if (signal?.aborted) break
+        const thread = getThread(bookId, chapterIndex)
+        const last = thread[thread.length - 1]
+        if (!last) break
+        updateLastMessage(bookId, chapterIndex, { content: last.content + token })
+      }
+      if (!signal?.aborted) {
+        updateLastMessage(bookId, chapterIndex, { status: 'done' })
+      }
+    } catch {
+      if (signal?.aborted) return
       updateLastMessage(bookId, chapterIndex, {
-        content: speechMode
-          ? `Dies ist eine simulierte Prosa-Antwort für Kapitel ${chapterIndex + 1}.`
-          : `### Simulierte Antwort\n\nDies ist eine **simulierte** Antwort.\n\n- Punkt eins\n- Punkt zwei`,
-        status: 'done',
+        content: 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+        status: 'error',
       })
-    }, 600)
+    }
   }
 
   return { threads, getThread, addMessage, updateLastMessage, clearThread, sendMessage }
