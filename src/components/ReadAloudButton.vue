@@ -1,7 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useBooksStore } from '@/stores/books'
+import { useTTS } from '@/composables/useTTS'
 
-const isPlaying = ref(false)
+const props = defineProps<{
+  text: string
+  autoPlay?: boolean
+}>()
+
+const emit = defineEmits<{ played: [] }>()
+
+const booksStore = useBooksStore()
+const { activeBook } = storeToRefs(booksStore)
+
+const { isPlaying, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
+
+function toggle() {
+  if (isPlaying.value) {
+    stop()
+  } else {
+    play(props.text)
+  }
+}
+
+onMounted(() => {
+  if (props.autoPlay) {
+    play(props.text)
+    emit('played')
+  }
+})
 </script>
 
 <template>
@@ -19,7 +47,7 @@ const isPlaying = ref(false)
       fontSize: '13px',
       fontFamily: 'var(--font-serif)',
     }"
-    @click="isPlaying = !isPlaying"
+    @click="toggle"
   >
     <!-- Idle: speaker icon -->
     <svg

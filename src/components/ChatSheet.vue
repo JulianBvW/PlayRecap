@@ -36,11 +36,17 @@ watch(
 const thread = computed(() => chatStore.getThread(props.bookId, props.chapterIndex))
 
 let activeController: AbortController | null = null
+const autoPlayIndex = ref<number | null>(null)
 
-function onSend(text: string, mode: boolean) {
+async function onSend(text: string, mode: boolean) {
   activeController?.abort()
-  activeController = new AbortController()
-  chatStore.sendMessage(props.bookId, props.chapterIndex, text, mode, activeController.signal)
+  const controller = new AbortController()
+  activeController = controller
+  autoPlayIndex.value = null
+  await chatStore.sendMessage(props.bookId, props.chapterIndex, text, mode, controller.signal)
+  if (mode && !controller.signal.aborted) {
+    autoPlayIndex.value = thread.value.length - 1
+  }
 }
 
 function onChipSend(text: string) {
@@ -141,13 +147,15 @@ onUnmounted(() => {
         <div style="flex: 1; overflow-y: auto; padding: 12px 0;">
           <ChatEmpty
             v-if="!thread.length"
-            :chapter-count="activeBook?.chapters.length ?? 0"
+            :chapter-index="chapterIndex"
             @send="onChipSend"
           />
           <ChatMessage
             v-for="(msg, i) in thread"
             :key="i"
             :message="msg"
+            :auto-play="autoPlayIndex === i"
+            @played="autoPlayIndex = null"
           />
         </div>
 

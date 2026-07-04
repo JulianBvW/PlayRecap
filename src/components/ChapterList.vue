@@ -24,6 +24,13 @@ const { currentChapterIndex } = useScrollSpy(scrollContainerRef, rowRefs)
 const tenthIndices = computed(() =>
   props.book.chapters.map((_, i) => i).filter(i => (i + 1) % 10 === 0),
 )
+const tenthSet = computed(() => new Set(tenthIndices.value))
+
+// Hide the hr at the top of a highlighted chapter and at the top of the chapter immediately after it,
+// so no dividing line appears "touching" the highlighted band.
+function showDivider(chapterIndex: number): boolean {
+  return !tenthSet.value.has(chapterIndex) && !tenthSet.value.has(chapterIndex - 1)
+}
 
 type HighlightPos = { top: number; height: number }
 const staticHighlights = ref<HighlightPos[]>([])
@@ -81,6 +88,7 @@ watch(currentChapterIndex, (newIdx) => {
         v-for="ch in book.chapters"
         :key="ch.index"
         :chapter="ch"
+        :show-divider="showDivider(ch.index)"
         :ref="(el) => { rowRefs[ch.index] = el ? (el as any).$el : null }"
         @open-chat="emit('open-chat', ch.index)"
       />

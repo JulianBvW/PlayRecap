@@ -2,13 +2,14 @@
 import type { Chapter } from '@/types/library'
 import { formatStartTime } from '@/utils/time'
 
-defineProps<{ chapter: Chapter }>()
+withDefaults(defineProps<{ chapter: Chapter; showDivider?: boolean }>(), { showDivider: true })
 const emit = defineEmits<{ 'open-chat': [chapterIndex: number] }>()
 </script>
 
 <template>
   <div style="position: relative; z-index: 1;">
     <hr
+      v-if="showDivider"
       style="
         height: 1px;
         border: none;
@@ -59,7 +60,8 @@ const emit = defineEmits<{ 'open-chat': [chapterIndex: number] }>()
           cursor: pointer;
           flex-shrink: 0;
           box-shadow: 0 1px 2px rgba(43,38,32,0.06);
-          padding: 0;
+          padding: 5px;
+          margin: -5px;
         "
         @click="emit('open-chat', chapter.index)"
       >

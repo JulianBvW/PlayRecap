@@ -37,14 +37,14 @@ function scrollToChapterIndex(chapterIndex: number) {
   }
 }
 
-function getTickIndexAtY(clientY: number): number {
+function getChapterAtY(clientY: number): number {
   const rail = railRef.value
   if (!rail) return 0
   const rect = rail.getBoundingClientRect()
   const pad = 8
   const relY = clientY - rect.top - pad
   const availH = rect.height - 2 * pad
-  const n = ticks.value.length
+  const n = props.totalChapters
   if (n <= 1) return 0
   const fraction = Math.max(0, Math.min(1, relY / availH))
   return Math.round(fraction * (n - 1))
@@ -57,11 +57,9 @@ function onPointerDown(e: PointerEvent) {
   if (rail) {
     dragOffsetY.value = e.clientY - rail.getBoundingClientRect().top
   }
-  const tickIdx = getTickIndexAtY(e.clientY)
-  const chapterNumber = ticks.value[tickIdx]
-  if (chapterNumber === undefined) return
-  dragChapterNumber.value = chapterNumber
-  scrollToChapterIndex(chapterNumber - 1)
+  const chapterIndex = getChapterAtY(e.clientY)
+  dragChapterNumber.value = chapterIndex + 1
+  scrollToChapterIndex(chapterIndex)
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -70,11 +68,9 @@ function onPointerMove(e: PointerEvent) {
   if (rail) {
     dragOffsetY.value = e.clientY - rail.getBoundingClientRect().top
   }
-  const tickIdx = getTickIndexAtY(e.clientY)
-  const chapterNumber = ticks.value[tickIdx]
-  if (chapterNumber === undefined) return
-  dragChapterNumber.value = chapterNumber
-  scrollToChapterIndex(chapterNumber - 1)
+  const chapterIndex = getChapterAtY(e.clientY)
+  dragChapterNumber.value = chapterIndex + 1
+  scrollToChapterIndex(chapterIndex)
 }
 
 function onPointerUp() {
@@ -143,6 +139,8 @@ const bubbleTop = computed(() => Math.max(0, dragOffsetY.value - 31) + 'px')
         pointerEvents: 'none',
         lineHeight: '1',
         boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+        animation: 'prc-pop .14s cubic-bezier(.22,1,.36,1) forwards',
+        transformOrigin: 'right center',
       }"
     >{{ dragChapterNumber }}</div>
   </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ chapterCount: number }>()
+defineProps<{ chapterIndex: number }>()
 const emit = defineEmits<{ send: [text: string] }>()
 
 const chips = [
@@ -56,7 +56,7 @@ const chipConditional = 'Letzte 3 Kapitel'
       >{{ chip }}</button>
 
       <button
-        v-if="chapterCount >= 3"
+        v-if="chapterIndex >= 2"
         style="
           border: 1px solid var(--color-line);
           background: var(--color-surface);

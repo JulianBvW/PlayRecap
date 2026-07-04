@@ -5,7 +5,8 @@ import StreamingCaret from '@/components/StreamingCaret.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ReadAloudButton from '@/components/ReadAloudButton.vue'
 
-defineProps<{ message: Message }>()
+defineProps<{ message: Message; autoPlay?: boolean }>()
+defineEmits<{ played: [] }>()
 </script>
 
 <template>
@@ -53,7 +54,7 @@ defineProps<{ message: Message }>()
         >{{ chunk }}</p>
       </template>
       <div style="margin-top: 10px;">
-        <ReadAloudButton />
+        <ReadAloudButton :text="message.content" :auto-play="autoPlay" @played="$emit('played')" />
       </div>
     </template>
   </div>
