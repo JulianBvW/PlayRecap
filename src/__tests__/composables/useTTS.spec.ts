@@ -6,8 +6,8 @@ describe('getVoiceId', () => {
     expect(getVoiceId('de')).toBe('de_female')
   })
 
-  it('en → gb_jane_neutral', () => {
-    expect(getVoiceId('en')).toBe('gb_jane_neutral')
+  it('en → neutral_female', () => {
+    expect(getVoiceId('en')).toBe('neutral_female')
   })
 
   it('auto → de_female (German default)', () => {

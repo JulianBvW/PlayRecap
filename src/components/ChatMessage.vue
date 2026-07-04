@@ -42,17 +42,7 @@ defineEmits<{ played: [] }>()
     </template>
 
     <template v-else-if="message.status === 'done'">
-      <MarkdownRenderer
-        v-if="message.format === 'markdown'"
-        :content="message.content"
-      />
-      <template v-else>
-        <p
-          v-for="(chunk, i) in message.content.split('\n\n').filter(Boolean)"
-          :key="i"
-          style="font-size: 16px; line-height: 1.7; color: var(--color-ink); margin: 6px 0;"
-        >{{ chunk }}</p>
-      </template>
+      <MarkdownRenderer :content="message.content" />
       <div style="margin-top: 10px;">
         <ReadAloudButton :text="message.content" :auto-play="autoPlay" @played="$emit('played')" />
       </div>

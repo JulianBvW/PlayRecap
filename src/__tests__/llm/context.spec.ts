@@ -24,18 +24,18 @@ function makeBook(overrides: Partial<BookRecord> = {}): BookRecord {
 
 describe('buildSystemPrompt', () => {
   it('omits series recap section when seriesRecap is null', () => {
-    const result = buildSystemPrompt(makeBook({ seriesRecap: null }), 2)
+    const result = buildSystemPrompt(makeBook({ seriesRecap: null }), 2, false)
     expect(result).not.toContain('Bisher in der Serie')
   })
 
   it('includes series recap section when seriesRecap is present', () => {
-    const result = buildSystemPrompt(makeBook({ seriesRecap: ['Held rettet Stadt'] }), 2)
+    const result = buildSystemPrompt(makeBook({ seriesRecap: ['Held rettet Stadt'] }), 2, false)
     expect(result).toContain('Bisher in der Serie')
     expect(result).toContain('Held rettet Stadt')
   })
 
   it('includes only chapters 0..anchorIndex and not beyond', () => {
-    const result = buildSystemPrompt(makeBook(), 2)
+    const result = buildSystemPrompt(makeBook(), 2, false)
     expect(result).toContain('Kapitel 1 Titel')
     expect(result).toContain('Kapitel 2 Titel')
     expect(result).toContain('Kapitel 3 Titel')
@@ -43,33 +43,38 @@ describe('buildSystemPrompt', () => {
   })
 
   it('emits correct language instructions for de / en / auto', () => {
-    expect(buildSystemPrompt(makeBook({ language: 'de' }), 0)).toContain('immer auf Deutsch')
-    expect(buildSystemPrompt(makeBook({ language: 'en' }), 0)).toContain('Always answer in English')
-    expect(buildSystemPrompt(makeBook({ language: 'auto' }), 0)).toContain('Sprache, in der die Zusammenfassungen')
+    expect(buildSystemPrompt(makeBook({ language: 'de' }), 0, false)).toContain('immer auf Deutsch')
+    expect(buildSystemPrompt(makeBook({ language: 'en' }), 0, false)).toContain('Always answer in English')
+    expect(buildSystemPrompt(makeBook({ language: 'auto' }), 0, false)).toContain(
+      'Sprache, in der die Zusammenfassungen',
+    )
+  })
+
+  it('markdown mode → system prompt contains Markdown instruction', () => {
+    expect(buildSystemPrompt(makeBook(), 0, false)).toContain('Markdown')
+  })
+
+  it('speech mode → system prompt contains Prosa instruction', () => {
+    expect(buildSystemPrompt(makeBook(), 0, true)).toContain('Prosa')
+  })
+
+  it('speech mode → system prompt does not contain Markdown formatting instruction', () => {
+    expect(buildSystemPrompt(makeBook(), 0, true)).not.toContain('### für Überschriften')
   })
 })
 
 describe('buildMessages', () => {
   const prompt = 'SYSTEM'
 
-  it('speech OFF → user content contains "Markdown"', () => {
-    const msgs = buildMessages([], 'Wer ist der Held?', false, prompt)
-    const last = msgs.at(-1)!
-    expect(last.role).toBe('user')
-    expect(last.content).toContain('Markdown')
+  it('prepends system message and appends user text verbatim', () => {
+    const msgs = buildMessages([], 'Frage', prompt)
+    expect(msgs[0]).toEqual({ role: 'system', content: 'SYSTEM' })
+    expect(msgs.at(-1)!).toEqual({ role: 'user', content: 'Frage' })
   })
 
-  it('speech ON → user content contains "Prosa"', () => {
-    const msgs = buildMessages([], 'Wer ist der Held?', true, prompt)
-    const last = msgs.at(-1)!
-    expect(last.role).toBe('user')
-    expect(last.content).toContain('Prosa')
-  })
-
-  it('prepends system message and appends user text', () => {
-    const msgs = buildMessages([], 'Frage', false, 'MEIN SYSTEM')
-    expect(msgs[0]).toEqual({ role: 'system', content: 'MEIN SYSTEM' })
-    expect(msgs.at(-1)!.content).toContain('Frage')
+  it('user message is not modified — no format prefix injected', () => {
+    const msgs = buildMessages([], 'Danke!', 'SYSTEM')
+    expect(msgs.at(-1)!.content).toBe('Danke!')
   })
 
   it('interleaves history between system and new user turn', () => {
@@ -77,11 +82,10 @@ describe('buildMessages', () => {
       { role: 'user' as const, content: 'Erste Frage' },
       { role: 'assistant' as const, content: 'Erste Antwort' },
     ]
-    const msgs = buildMessages(history, 'Zweite Frage', false, prompt)
+    const msgs = buildMessages(history, 'Zweite Frage', prompt)
     expect(msgs).toHaveLength(4) // system + 2 history + new user
     expect(msgs[1]).toEqual({ role: 'user', content: 'Erste Frage' })
     expect(msgs[2]).toEqual({ role: 'assistant', content: 'Erste Antwort' })
-    expect(msgs[3].role).toBe('user')
-    expect(msgs[3].content).toContain('Zweite Frage')
+    expect(msgs[3]).toEqual({ role: 'user', content: 'Zweite Frage' })
   })
 })

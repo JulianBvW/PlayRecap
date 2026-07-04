@@ -77,8 +77,8 @@ export const useChatStore = defineStore('chat', () => {
         })
         return
       }
-      const systemPrompt = buildSystemPrompt(book, chapterIndex)
-      const messages = buildMessages(history, text, speechMode, systemPrompt)
+      const systemPrompt = buildSystemPrompt(book, chapterIndex, speechMode)
+      const messages = buildMessages(history, text, systemPrompt)
 
       updateLastMessage(bookId, chapterIndex, { status: 'streaming' })
       for await (const token of streamChat(messages, settingsStore.apiKey, signal)) {

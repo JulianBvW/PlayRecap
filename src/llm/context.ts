@@ -6,7 +6,7 @@ export interface MistralMessage {
   content: string
 }
 
-export function buildSystemPrompt(book: BookRecord, anchorIndex: number): string {
+export function buildSystemPrompt(book: BookRecord, anchorIndex: number, speechMode: boolean): string {
   const lines: string[] = []
 
   lines.push('Du bist ein hilfreicher Assistent für Hörbücher.')
@@ -23,6 +23,16 @@ export function buildSystemPrompt(book: BookRecord, anchorIndex: number): string
     `Dein Wissen über dieses Buch endet nach Kapitel ${anchorIndex + 1}. Gib keine Informationen über spätere Kapitel preis.`,
   )
 
+  if (speechMode) {
+    lines.push(
+      '\nDeine Antwort wird direkt vorgelesen. Schreibe ausschließlich in fließender Prosa — kein Markdown, keine Aufzählungszeichen, keine Überschriften. Standardmäßig 3–4 Absätze; passe die Länge dem Anliegen an, wenn der Nutzer ausdrücklich mehr oder weniger möchte.',
+    )
+  } else {
+    lines.push(
+      '\nAntworte mit strukturiertem Markdown (### für Überschriften, ** für Fettdruck, - für Listen). Bei Zusammenfassungen: gliedere nach inhaltlichen Bögen — nicht nach Kapitelnummern. Standardmäßig 4–5 Abschnitte; passe Ausführlichkeit und Länge dem Anliegen an, wenn der Nutzer ausdrücklich mehr oder weniger möchte.',
+    )
+  }
+
   lines.push(`\nBuch: ${book.title}`)
   lines.push(`Autor: ${book.author}`)
 
@@ -31,7 +41,9 @@ export function buildSystemPrompt(book: BookRecord, anchorIndex: number): string
     book.seriesRecap.forEach((bullet) => lines.push(`- ${bullet}`))
   }
 
-  lines.push('\nKapitelzusammenfassungen:')
+  lines.push(
+    '\nKapitelzusammenfassungen (nur als Kontext — nutze in Antworten eine eigene thematische Gliederung, keine Kapitelnummern):',
+  )
   for (let i = 0; i <= anchorIndex; i++) {
     const ch = book.chapters[i]
     if (!ch) continue
@@ -45,16 +57,11 @@ export function buildSystemPrompt(book: BookRecord, anchorIndex: number): string
 export function buildMessages(
   history: { role: MessageRole; content: string }[],
   userText: string,
-  speechMode: boolean,
   systemPrompt: string,
 ): MistralMessage[] {
-  const modePrefix = speechMode
-    ? 'Die Antwort wird vorgelesen. Antworte in natürlicher gesprochener Prosa ohne Markdown-Formatierung. '
-    : 'Antworte mit strukturiertem Markdown (Überschriften mit ###, Fettdruck mit **, Listen mit -). '
-
   return [
     { role: 'system', content: systemPrompt },
     ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-    { role: 'user', content: modePrefix + userText },
+    { role: 'user', content: userText },
   ]
 }

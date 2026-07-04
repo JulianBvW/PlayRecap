@@ -5,11 +5,9 @@ import { stripMarkdown } from '@/utils/markdown'
 const VOXTRAL_ENDPOINT = 'https://api.mistral.ai/v1/audio/speech'
 const VOXTRAL_MODEL = 'voxtral-mini-tts-2603'
 
-// German voice: 'de_female' is the local-model preset name; the cloud API may use
-// a different identifier — verify via GET /v1/audio/voices with a real key if TTS fails.
 export function getVoiceId(language: string): string {
-  if (language === 'en') return 'gb_jane_neutral'
-  return 'de_female' // 'de' and 'auto' both default to German
+  if (language === 'en') return 'neutral_female'
+  return 'de_female'
 }
 
 export function useTTS(language: string) {
