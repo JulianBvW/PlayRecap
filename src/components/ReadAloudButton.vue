@@ -14,7 +14,7 @@ const emit = defineEmits<{ played: [] }>()
 const booksStore = useBooksStore()
 const { activeBook } = storeToRefs(booksStore)
 
-const { isPlaying, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
+const { isPlaying, isAvailable, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
 
 function toggle() {
   if (isPlaying.value) {
@@ -34,6 +34,7 @@ onMounted(() => {
 
 <template>
   <button
+    v-if="isAvailable"
     :style="{
       display: 'inline-flex',
       alignItems: 'center',

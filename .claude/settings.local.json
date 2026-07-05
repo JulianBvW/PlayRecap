@@ -13,7 +13,9 @@
       "Bash(source ~/.nvm/nvm.sh && git diff --name-only HEAD && echo \"---\" && git status --short && echo \"---\" && git diff --stat HEAD)",
       "Bash(source ~/.nvm/nvm.sh && git diff HEAD)",
       "Skill(deep-research)",
-      "Workflow(deep-research)"
+      "Workflow(deep-research)",
+      "WebFetch(domain:mistral.ai)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

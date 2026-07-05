@@ -5,12 +5,17 @@ import { stripMarkdown } from '@/utils/markdown'
 const VOXTRAL_ENDPOINT = 'https://api.mistral.ai/v1/audio/speech'
 const VOXTRAL_MODEL = 'voxtral-mini-tts-2603'
 
-export function getVoiceId(language: string): string {
-  if (language === 'en') return 'neutral_female'
-  return 'de_female'
+// Returns the Voxtral voice slug for a given book language, or null if unsupported.
+// Only English is currently available on the Mistral TTS API (as of 2026-07).
+export function getVoiceId(language: string): string | null {
+  if (language === 'en') return 'gb_oliver_neutral'
+  return null
 }
 
 export function useTTS(language: string) {
+  const voiceId = getVoiceId(language)
+  const isAvailable = voiceId !== null
+
   const isPlaying = ref(false)
   let audio: HTMLAudioElement | null = null
   let blobUrl: string | null = null
@@ -26,6 +31,7 @@ export function useTTS(language: string) {
   }
 
   async function play(text: string) {
+    if (!voiceId) return
     stop()
     const settingsStore = useSettingsStore()
     if (!settingsStore.apiKey) return
@@ -44,7 +50,7 @@ export function useTTS(language: string) {
         body: JSON.stringify({
           model: VOXTRAL_MODEL,
           input,
-          voice_id: getVoiceId(language),
+          voice_id: voiceId,
           response_format: 'mp3',
         }),
       })
@@ -66,5 +72,5 @@ export function useTTS(language: string) {
 
   onUnmounted(stop)
 
-  return { isPlaying, play, stop }
+  return { isPlaying, isAvailable, play, stop }
 }
