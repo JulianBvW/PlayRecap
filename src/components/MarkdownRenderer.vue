@@ -3,24 +3,29 @@ import { computed } from 'vue'
 
 const props = defineProps<{ content: string }>()
 
-type InlinePart = { bold: boolean; text: string }
+type InlinePart = { bold: boolean; italic: boolean; text: string }
 type Segment =
   | { type: 'hr' }
   | { type: 'heading'; level: 3 | 4; parts: InlinePart[] }
   | { type: 'bullet'; indent: number; parts: InlinePart[] }
   | { type: 'paragraph'; parts: InlinePart[] }
 
-function splitBold(line: string): InlinePart[] {
+function splitInline(line: string): InlinePart[] {
   const parts: InlinePart[] = []
-  const re = /\*\*(.+?)\*\*/g
+  // **bold** must come before *italic* in the alternation to avoid partial matches
+  const re = /\*\*(.+?)\*\*|\*([^*\n]+?)\*/g
   let last = 0
   let match: RegExpExecArray | null
   while ((match = re.exec(line)) !== null) {
-    if (match.index > last) parts.push({ bold: false, text: line.slice(last, match.index) })
-    parts.push({ bold: true, text: match[1]! })
+    if (match.index > last) parts.push({ bold: false, italic: false, text: line.slice(last, match.index) })
+    if (match[1] !== undefined) {
+      parts.push({ bold: true, italic: false, text: match[1] })
+    } else {
+      parts.push({ bold: false, italic: true, text: match[2]! })
+    }
     last = match.index + match[0].length
   }
-  if (last < line.length) parts.push({ bold: false, text: line.slice(last) })
+  if (last < line.length) parts.push({ bold: false, italic: false, text: line.slice(last) })
   return parts
 }
 
@@ -30,16 +35,16 @@ const segments = computed<Segment[]>(() => {
     if (/^[-*_]{3,}$/.test(line.trim())) {
       acc.push({ type: 'hr' })
     } else if (line.startsWith('#### ')) {
-      acc.push({ type: 'heading', level: 4, parts: splitBold(line.slice(5)) })
+      acc.push({ type: 'heading', level: 4, parts: splitInline(line.slice(5)) })
     } else if (line.startsWith('### ')) {
-      acc.push({ type: 'heading', level: 3, parts: splitBold(line.slice(4)) })
+      acc.push({ type: 'heading', level: 3, parts: splitInline(line.slice(4)) })
     } else {
       const bulletMatch = line.match(/^(\s*)- (.*)$/)
       if (bulletMatch) {
         const indent = Math.min(Math.floor(bulletMatch[1]!.length / 2), 2)
-        acc.push({ type: 'bullet', indent, parts: splitBold(bulletMatch[2] ?? '') })
+        acc.push({ type: 'bullet', indent, parts: splitInline(bulletMatch[2] ?? '') })
       } else {
-        acc.push({ type: 'paragraph', parts: splitBold(line) })
+        acc.push({ type: 'paragraph', parts: splitInline(line) })
       }
     }
     return acc
@@ -63,6 +68,7 @@ const segments = computed<Segment[]>(() => {
       >
         <template v-for="(part, j) in seg.parts" :key="j">
           <strong v-if="part.bold">{{ part.text }}</strong>
+          <em v-else-if="part.italic">{{ part.text }}</em>
           <template v-else>{{ part.text }}</template>
         </template>
       </p>
@@ -75,6 +81,7 @@ const segments = computed<Segment[]>(() => {
         <span style="font-size: 16px; line-height: 1.62; color: var(--color-ink);">
           <template v-for="(part, j) in seg.parts" :key="j">
             <strong v-if="part.bold">{{ part.text }}</strong>
+            <em v-else-if="part.italic">{{ part.text }}</em>
             <template v-else>{{ part.text }}</template>
           </template>
         </span>
@@ -86,6 +93,7 @@ const segments = computed<Segment[]>(() => {
       >
         <template v-for="(part, j) in seg.parts" :key="j">
           <strong v-if="part.bold">{{ part.text }}</strong>
+          <em v-else-if="part.italic">{{ part.text }}</em>
           <template v-else>{{ part.text }}</template>
         </template>
       </p>

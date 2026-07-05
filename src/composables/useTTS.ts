@@ -5,18 +5,18 @@ import { stripMarkdown } from '@/utils/markdown'
 const VOXTRAL_ENDPOINT = 'https://api.mistral.ai/v1/audio/speech'
 const VOXTRAL_MODEL = 'voxtral-mini-tts-2603'
 
-// Returns the Voxtral voice slug for a given book language, or null if unsupported.
-// Only English is currently available on the Mistral TTS API (as of 2026-07).
-export function getVoiceId(language: string): string | null {
-  if (language === 'en') return 'gb_oliver_neutral'
-  return null
+// Returns the Voxtral voice slug for a given book language.
+// No German preset exists on the Mistral cloud API; we use an English voice as fallback.
+export function getVoiceId(_language: string): string {
+  return 'gb_oliver_neutral'
 }
 
 export function useTTS(language: string) {
   const voiceId = getVoiceId(language)
-  const isAvailable = voiceId !== null
+  const isAvailable = true
 
   const isPlaying = ref(false)
+  const isLoading = ref(false)
   let audio: HTMLAudioElement | null = null
   let blobUrl: string | null = null
 
@@ -28,10 +28,10 @@ export function useTTS(language: string) {
       blobUrl = null
     }
     isPlaying.value = false
+    isLoading.value = false
   }
 
   async function play(text: string) {
-    if (!voiceId) return
     stop()
     const settingsStore = useSettingsStore()
     if (!settingsStore.apiKey) return
@@ -39,7 +39,7 @@ export function useTTS(language: string) {
     const input = stripMarkdown(text)
     if (!input) return
 
-    isPlaying.value = true
+    isLoading.value = true
     try {
       const response = await fetch(VOXTRAL_ENDPOINT, {
         method: 'POST',
@@ -64,6 +64,9 @@ export function useTTS(language: string) {
       audio = new Audio(blobUrl)
       audio.onended = stop
       audio.onerror = stop
+
+      isLoading.value = false
+      isPlaying.value = true
       await audio.play()
     } catch {
       stop()
@@ -72,5 +75,5 @@ export function useTTS(language: string) {
 
   onUnmounted(stop)
 
-  return { isPlaying, isAvailable, play, stop }
+  return { isPlaying, isLoading, isAvailable, play, stop }
 }

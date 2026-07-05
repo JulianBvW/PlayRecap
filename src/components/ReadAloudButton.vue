@@ -14,10 +14,10 @@ const emit = defineEmits<{ played: [] }>()
 const booksStore = useBooksStore()
 const { activeBook } = storeToRefs(booksStore)
 
-const { isPlaying, isAvailable, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
+const { isPlaying, isLoading, isAvailable, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
 
 function toggle() {
-  if (isPlaying.value) {
+  if (isPlaying.value || isLoading.value) {
     stop()
   } else {
     play(props.text)
@@ -41,53 +41,54 @@ onMounted(() => {
       gap: '6px',
       padding: '7px 14px',
       borderRadius: '20px',
-      border: `1px solid ${isPlaying ? 'var(--color-accent)' : 'var(--color-line)'}`,
-      background: isPlaying ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-      color: isPlaying ? 'var(--color-accent)' : 'var(--color-sub)',
-      cursor: 'pointer',
+      border: `1px solid ${isPlaying ? 'var(--color-accent)' : isLoading ? 'var(--color-faint)' : 'var(--color-line)'}`,
+      background: isPlaying ? 'var(--color-accent-soft)' : isLoading ? 'var(--color-surface)' : 'var(--color-surface)',
+      color: isPlaying ? 'var(--color-accent)' : isLoading ? 'var(--color-faint)' : 'var(--color-sub)',
+      cursor: isLoading ? 'default' : 'pointer',
       fontSize: '13px',
       fontFamily: 'var(--font-serif)',
+      opacity: isLoading ? '0.7' : '1',
     }"
     @click="toggle"
   >
+    <!-- Loading: spinner dots -->
+    <template v-if="isLoading">
+      <span
+        v-for="(delay, i) in ['0s', '0.18s', '0.36s']"
+        :key="i"
+        :style="{
+          display: 'inline-block',
+          width: '4px',
+          height: '4px',
+          background: 'var(--color-faint)',
+          borderRadius: '50%',
+          animation: 'prc-dot 0.9s ease-in-out infinite',
+          animationDelay: delay,
+        }"
+      />
+      <span>Lädt…</span>
+    </template>
+
     <!-- Idle: speaker icon -->
-    <svg
-      v-if="!isPlaying"
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M2 5H4.5L8 2V12L4.5 9H2V5Z"
-        fill="var(--color-sub)"
-      />
-      <path
-        d="M10 4.5C10.9 5.4 10.9 8.6 10 9.5M11.5 3C13.2 4.7 13.2 9.3 11.5 11"
-        stroke="var(--color-sub)"
-        stroke-width="1.2"
-        stroke-linecap="round"
-      />
-    </svg>
+    <template v-else-if="!isPlaying">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 5H4.5L8 2V12L4.5 9H2V5Z" fill="var(--color-sub)" />
+        <path
+          d="M10 4.5C10.9 5.4 10.9 8.6 10 9.5M11.5 3C13.2 4.7 13.2 9.3 11.5 11"
+          stroke="var(--color-sub)"
+          stroke-width="1.2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span>Vorlesen</span>
+    </template>
 
-    <!-- Playing: stop square -->
-    <svg
-      v-else
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-    >
-      <rect x="3" y="3" width="8" height="8" rx="1.5" fill="var(--color-accent)" />
-    </svg>
-
-    <span v-if="!isPlaying">Vorlesen</span>
-    <span v-else>Wird vorgelesen</span>
-
-    <!-- Equalizer bars (playing only) -->
-    <template v-if="isPlaying">
+    <!-- Playing: stop square + label + equalizer -->
+    <template v-else>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="3" y="3" width="8" height="8" rx="1.5" fill="var(--color-accent)" />
+      </svg>
+      <span>Wird vorgelesen</span>
       <span
         v-for="(delay, i) in ['0s', '0.15s', '0.3s']"
         :key="i"
