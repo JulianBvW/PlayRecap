@@ -9,6 +9,7 @@ type Segment =
   | { type: 'heading'; level: 3 | 4; parts: InlinePart[] }
   | { type: 'bullet'; indent: number; parts: InlinePart[] }
   | { type: 'paragraph'; parts: InlinePart[] }
+  | { type: 'table'; headers: InlinePart[][]; rows: InlinePart[][] }
 
 function splitInline(line: string): InlinePart[] {
   const parts: InlinePart[] = []
@@ -29,26 +30,64 @@ function splitInline(line: string): InlinePart[] {
   return parts
 }
 
+function parseTableRow(line: string): InlinePart[][] {
+  return line
+    .split('|')
+    .slice(1, -1)
+    .map((cell) => splitInline(cell.trim()))
+}
+
+function isSeparatorRow(line: string): boolean {
+  return line
+    .split('|')
+    .slice(1, -1)
+    .every((cell) => /^\s*:?-+:?\s*$/.test(cell))
+}
+
 const segments = computed<Segment[]>(() => {
-  return props.content.split('\n').reduce<Segment[]>((acc, line) => {
-    if (!line.trim()) return acc
-    if (/^[-*_]{3,}$/.test(line.trim())) {
-      acc.push({ type: 'hr' })
-    } else if (line.startsWith('#### ')) {
-      acc.push({ type: 'heading', level: 4, parts: splitInline(line.slice(5)) })
-    } else if (line.startsWith('### ')) {
-      acc.push({ type: 'heading', level: 3, parts: splitInline(line.slice(4)) })
+  const lines = props.content.split('\n').filter((l) => l.trim())
+  const result: Segment[] = []
+  let tableLines: string[] = []
+
+  function flushTable() {
+    if (tableLines.length < 2) {
+      tableLines.forEach((l) => result.push({ type: 'paragraph', parts: splitInline(l) }))
+      tableLines = []
+      return
+    }
+    const sepIdx = tableLines.findIndex((l) => isSeparatorRow(l))
+    const headers = sepIdx > 0 ? parseTableRow(tableLines[0]!) : []
+    const dataRows = tableLines
+      .filter((_, i) => i !== sepIdx && (headers.length === 0 || i !== 0))
+      .map(parseTableRow)
+    result.push({ type: 'table', headers, rows: dataRows })
+    tableLines = []
+  }
+
+  for (const line of lines) {
+    if (line.trim().startsWith('|')) {
+      tableLines.push(line)
     } else {
-      const bulletMatch = line.match(/^(\s*)- (.*)$/)
-      if (bulletMatch) {
-        const indent = Math.min(Math.floor(bulletMatch[1]!.length / 2), 2)
-        acc.push({ type: 'bullet', indent, parts: splitInline(bulletMatch[2] ?? '') })
+      if (tableLines.length > 0) flushTable()
+      if (/^[-*_]{3,}$/.test(line.trim())) {
+        result.push({ type: 'hr' })
+      } else if (line.startsWith('#### ')) {
+        result.push({ type: 'heading', level: 4, parts: splitInline(line.slice(5)) })
+      } else if (line.startsWith('### ')) {
+        result.push({ type: 'heading', level: 3, parts: splitInline(line.slice(4)) })
       } else {
-        acc.push({ type: 'paragraph', parts: splitInline(line) })
+        const bulletMatch = line.match(/^(\s*)- (.*)$/)
+        if (bulletMatch) {
+          const indent = Math.min(Math.floor(bulletMatch[1]!.length / 2), 2)
+          result.push({ type: 'bullet', indent, parts: splitInline(bulletMatch[2] ?? '') })
+        } else {
+          result.push({ type: 'paragraph', parts: splitInline(line) })
+        }
       }
     }
-    return acc
-  }, [])
+  }
+  if (tableLines.length > 0) flushTable()
+  return result
 })
 </script>
 
@@ -85,6 +124,61 @@ const segments = computed<Segment[]>(() => {
             <template v-else>{{ part.text }}</template>
           </template>
         </span>
+      </div>
+
+      <!-- Table -->
+      <div
+        v-else-if="seg.type === 'table'"
+        style="overflow-x: auto; margin: 10px 0;"
+      >
+        <table style="border-collapse: collapse; font-size: 14px; width: 100%; min-width: max-content;">
+          <thead v-if="seg.headers.length > 0">
+            <tr>
+              <th
+                v-for="(cell, ci) in seg.headers"
+                :key="ci"
+                style="
+                  padding: 6px 12px;
+                  text-align: left;
+                  font-weight: 600;
+                  color: var(--color-ink);
+                  border-bottom: 2px solid var(--color-line);
+                  white-space: nowrap;
+                "
+              >
+                <template v-for="(part, j) in cell" :key="j">
+                  <strong v-if="part.bold">{{ part.text }}</strong>
+                  <em v-else-if="part.italic">{{ part.text }}</em>
+                  <template v-else>{{ part.text }}</template>
+                </template>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(row, ri) in seg.rows"
+              :key="ri"
+              :style="ri % 2 === 1 ? 'background: var(--color-panel)' : ''"
+            >
+              <td
+                v-for="(cell, ci) in row"
+                :key="ci"
+                style="
+                  padding: 6px 12px;
+                  color: var(--color-ink);
+                  border-bottom: 1px solid var(--color-line);
+                  vertical-align: top;
+                "
+              >
+                <template v-for="(part, j) in cell" :key="j">
+                  <strong v-if="part.bold">{{ part.text }}</strong>
+                  <em v-else-if="part.italic">{{ part.text }}</em>
+                  <template v-else>{{ part.text }}</template>
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <p

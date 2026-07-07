@@ -18,7 +18,15 @@ export async function* streamChat(
     signal,
   })
 
-  if (!response.ok) throw new Error(`${response.status}`)
+  if (!response.ok) {
+    let detail = `HTTP ${response.status}`
+    try {
+      const body = await response.json()
+      const msg = body?.detail ?? body?.message ?? body?.error?.message
+      if (msg) detail = `${response.status}: ${msg}`
+    } catch { /* body not JSON */ }
+    throw new Error(detail)
+  }
 
   const reader = response.body!.getReader()
   const decoder = new TextDecoder()

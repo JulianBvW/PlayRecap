@@ -89,13 +89,16 @@ export const useChatStore = defineStore('chat', () => {
         updateLastMessage(bookId, chapterIndex, { content: last.content + token })
       }
       updateLastMessage(bookId, chapterIndex, { status: 'done' })
-    } catch {
+    } catch (err) {
       if (signal?.aborted) {
         updateLastMessage(bookId, chapterIndex, { status: 'done' })
         return
       }
+      const detail = err instanceof Error ? err.message : null
       updateLastMessage(bookId, chapterIndex, {
-        content: 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+        content: detail
+          ? `Fehler: ${detail}`
+          : 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.',
         status: 'error',
       })
     }
