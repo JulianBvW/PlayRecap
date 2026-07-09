@@ -13,12 +13,13 @@ type Segment =
 
 function splitInline(line: string): InlinePart[] {
   const parts: InlinePart[] = []
+  const cleaned = line.replace(/<br\s*\/?>/gi, ' ')
   // **bold** must come before *italic* in the alternation to avoid partial matches
   const re = /\*\*(.+?)\*\*|\*([^*\n]+?)\*/g
   let last = 0
   let match: RegExpExecArray | null
-  while ((match = re.exec(line)) !== null) {
-    if (match.index > last) parts.push({ bold: false, italic: false, text: line.slice(last, match.index) })
+  while ((match = re.exec(cleaned)) !== null) {
+    if (match.index > last) parts.push({ bold: false, italic: false, text: cleaned.slice(last, match.index) })
     if (match[1] !== undefined) {
       parts.push({ bold: true, italic: false, text: match[1] })
     } else {
@@ -26,7 +27,7 @@ function splitInline(line: string): InlinePart[] {
     }
     last = match.index + match[0].length
   }
-  if (last < line.length) parts.push({ bold: false, italic: false, text: line.slice(last) })
+  if (last < cleaned.length) parts.push({ bold: false, italic: false, text: cleaned.slice(last) })
   return parts
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, nextTick } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import type { BookRecord } from '@/types/library'
 import ChapterRow from '@/components/ChapterRow.vue'
 import SeriesRecapEntry from '@/components/SeriesRecapEntry.vue'
@@ -15,6 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const scrollContainerRef = ref<HTMLElement | null>(null)
+const contentWrapRef = ref<HTMLElement | null>(null)
 const rowRefs = ref<(HTMLElement | null)[]>([])
 defineExpose({ scrollContainerRef, rowRefs })
 
@@ -42,15 +43,28 @@ function computeStaticHighlights() {
   })
 }
 
+let resizeObserver: ResizeObserver | null = null
+
 onMounted(async () => {
   await nextTick()
   computeStaticHighlights()
+  // ResizeObserver fires after browser layout is final — more reliable than nextTick alone
+  if (contentWrapRef.value) {
+    resizeObserver = new ResizeObserver(() => computeStaticHighlights())
+    resizeObserver.observe(contentWrapRef.value)
+  }
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+  resizeObserver = null
 })
 
 watch(() => props.book.id, async () => {
   await nextTick()
   if (scrollContainerRef.value) scrollContainerRef.value.scrollTop = 0
   computeStaticHighlights()
+  // contentWrapRef element is reused across book changes; observer stays active
 })
 
 watch(currentChapterIndex, (newIdx) => {
@@ -79,29 +93,32 @@ watch(currentChapterIndex, (newIdx) => {
         :animate="false"
       />
 
-      <SeriesRecapEntry
-        v-if="book.seriesRecap !== null"
-        @open="emit('open-series-recap')"
-      />
+      <!-- contentWrapRef lets ResizeObserver detect any layout change and recompute highlight positions -->
+      <div ref="contentWrapRef">
+        <SeriesRecapEntry
+          v-if="book.seriesRecap !== null"
+          @open="emit('open-series-recap')"
+        />
 
-      <ChapterRow
-        v-for="ch in book.chapters"
-        :key="ch.index"
-        :chapter="ch"
-        :show-divider="showDivider(ch.index)"
-        :ref="(el) => { rowRefs[ch.index] = el ? (el as any).$el : null }"
-        @open-chat="emit('open-chat', ch.index)"
-      />
+        <ChapterRow
+          v-for="ch in book.chapters"
+          :key="ch.index"
+          :chapter="ch"
+          :show-divider="showDivider(ch.index)"
+          :ref="(el) => { rowRefs[ch.index] = el ? (el as any).$el : null }"
+          @open-chat="emit('open-chat', ch.index)"
+        />
 
-      <div
-        style="
-          padding: 32px 0 48px;
-          text-align: center;
-          color: var(--color-faint);
-          font-size: 13px;
-        "
-      >
-        Ende des Buches
+        <div
+          style="
+            padding: 32px 0 48px;
+            text-align: center;
+            color: var(--color-faint);
+            font-size: 13px;
+          "
+        >
+          Ende des Buches
+        </div>
       </div>
     </div>
 
