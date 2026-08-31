@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useBooksStore } from '@/stores/books'
+import { watch } from 'vue'
 import { useTTS } from '@/composables/useTTS'
 
 const props = defineProps<{
@@ -11,10 +9,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ played: [] }>()
 
-const booksStore = useBooksStore()
-const { activeBook } = storeToRefs(booksStore)
-
-const { isPlaying, isLoading, isAvailable, play, stop } = useTTS(activeBook.value?.language ?? 'auto')
+const { isPlaying, isLoading, error, play, stop } = useTTS()
 
 function toggle() {
   if (isPlaying.value || isLoading.value) {
@@ -24,26 +19,47 @@ function toggle() {
   }
 }
 
-onMounted(() => {
-  if (props.autoPlay) {
+// A watch, not onMounted: in speech mode the parent sets autoPlay only after the
+// stream resolves, which can land either before or after this component mounts
+// (the status flip to 'done' is what mounts it). immediate covers the first case,
+// the watch itself the second — onMounted alone missed the second and the answer
+// then never started on its own.
+watch(
+  () => props.autoPlay,
+  (shouldPlay) => {
+    if (!shouldPlay) return
     play(props.text)
     emit('played')
-  }
-})
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <button
-    v-if="isAvailable"
     :style="{
       display: 'inline-flex',
       alignItems: 'center',
       gap: '6px',
       padding: '7px 14px',
       borderRadius: '20px',
-      border: `1px solid ${isPlaying ? 'var(--color-accent)' : isLoading ? 'var(--color-faint)' : 'var(--color-line)'}`,
-      background: isPlaying ? 'var(--color-accent-soft)' : isLoading ? 'var(--color-surface)' : 'var(--color-surface)',
-      color: isPlaying ? 'var(--color-accent)' : isLoading ? 'var(--color-faint)' : 'var(--color-sub)',
+      border: `1px solid ${
+        error
+          ? 'var(--color-danger)'
+          : isPlaying
+            ? 'var(--color-accent)'
+            : isLoading
+              ? 'var(--color-faint)'
+              : 'var(--color-line)'
+      }`,
+      background: isPlaying ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+      color: error
+        ? 'var(--color-danger)'
+        : isPlaying
+          ? 'var(--color-accent)'
+          : isLoading
+            ? 'var(--color-faint)'
+            : 'var(--color-sub)',
       cursor: isLoading ? 'default' : 'pointer',
       fontSize: '13px',
       fontFamily: 'var(--font-serif)',
@@ -51,8 +67,27 @@ onMounted(() => {
     }"
     @click="toggle"
   >
+    <!-- Error: what went wrong, tapping retries -->
+    <template v-if="error">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path
+          d="M7 1.5L13 12.5H1L7 1.5Z"
+          stroke="var(--color-danger)"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M7 5.5V8.5M7 10.4V10.6"
+          stroke="var(--color-danger)"
+          stroke-width="1.2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <span>{{ error }}</span>
+    </template>
+
     <!-- Loading: spinner dots -->
-    <template v-if="isLoading">
+    <template v-else-if="isLoading">
       <span
         v-for="(delay, i) in ['0s', '0.18s', '0.36s']"
         :key="i"

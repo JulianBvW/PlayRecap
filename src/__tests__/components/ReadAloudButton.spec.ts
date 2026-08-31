@@ -1,26 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
 import ReadAloudButton from '@/components/ReadAloudButton.vue'
 
-vi.mock('@/composables/useTTS', () => ({
-  useTTS: () => ({
-    isPlaying: ref(false),
-    isLoading: ref(false),
-    isAvailable: true,
-    play: vi.fn(),
-    stop: vi.fn(),
-  }),
-  getVoiceId: () => 'gb_oliver_neutral',
-}))
+const tts = {
+  isPlaying: ref(false),
+  isLoading: ref(false),
+  error: ref<string | null>(null),
+  play: vi.fn<(text: string) => void>(),
+  stop: vi.fn<() => void>(),
+}
 
-vi.mock('@/stores/books', () => ({
-  useBooksStore: () => ({ activeBook: ref(null) }),
+vi.mock('@/composables/useTTS', () => ({
+  useTTS: () => tts,
 }))
 
 beforeEach(() => {
-  setActivePinia(createPinia())
+  tts.isPlaying.value = false
+  tts.isLoading.value = false
+  tts.error.value = null
+  tts.play.mockClear()
+  tts.stop.mockClear()
 })
 
 describe('ReadAloudButton', () => {
@@ -31,8 +31,70 @@ describe('ReadAloudButton', () => {
     expect(wrapper.text()).not.toContain('Lädt')
   })
 
-  it('button is rendered when isAvailable is true', () => {
+  it('playing state shows "Wird vorgelesen"', async () => {
     const wrapper = mount(ReadAloudButton, { props: { text: 'Test text' } })
-    expect(wrapper.find('button').exists()).toBe(true)
+    tts.isPlaying.value = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Wird vorgelesen')
+  })
+
+  it('loading state shows "Lädt…"', async () => {
+    const wrapper = mount(ReadAloudButton, { props: { text: 'Test text' } })
+    tts.isLoading.value = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Lädt')
+  })
+
+  it('tapping starts playback, tapping again stops it', async () => {
+    const wrapper = mount(ReadAloudButton, { props: { text: 'Test text' } })
+    await wrapper.find('button').trigger('click')
+    expect(tts.play).toHaveBeenCalledWith('Test text')
+
+    tts.isPlaying.value = true
+    await wrapper.vm.$nextTick()
+    await wrapper.find('button').trigger('click')
+    expect(tts.stop).toHaveBeenCalled()
+  })
+
+  describe('error state', () => {
+    it('surfaces the failure instead of looking idle', async () => {
+      const wrapper = mount(ReadAloudButton, { props: { text: 'Test text' } })
+      tts.error.value = 'API-Schlüssel ungültig'
+      await wrapper.vm.$nextTick()
+      expect(wrapper.text()).toContain('API-Schlüssel ungültig')
+      expect(wrapper.text()).not.toContain('Vorlesen')
+    })
+
+    it('stays tappable so the user can retry', async () => {
+      const wrapper = mount(ReadAloudButton, { props: { text: 'Test text' } })
+      tts.error.value = 'Zu viele Anfragen'
+      await wrapper.vm.$nextTick()
+      await wrapper.find('button').trigger('click')
+      expect(tts.play).toHaveBeenCalledWith('Test text')
+    })
+  })
+
+  describe('auto-play in speech mode', () => {
+    it('plays when autoPlay is already true at mount', () => {
+      const wrapper = mount(ReadAloudButton, { props: { text: 'Answer', autoPlay: true } })
+      expect(tts.play).toHaveBeenCalledWith('Answer')
+      expect(wrapper.emitted('played')).toHaveLength(1)
+    })
+
+    // The regression this replaced onMounted for: the parent sets autoPlay only
+    // after the stream resolves, which can land after this component has mounted.
+    it('plays when autoPlay flips to true after mount', async () => {
+      const wrapper = mount(ReadAloudButton, { props: { text: 'Answer', autoPlay: false } })
+      expect(tts.play).not.toHaveBeenCalled()
+
+      await wrapper.setProps({ autoPlay: true })
+      expect(tts.play).toHaveBeenCalledWith('Answer')
+      expect(wrapper.emitted('played')).toHaveLength(1)
+    })
+
+    it('does not play on its own when autoPlay stays false', () => {
+      mount(ReadAloudButton, { props: { text: 'Answer', autoPlay: false } })
+      expect(tts.play).not.toHaveBeenCalled()
+    })
   })
 })
