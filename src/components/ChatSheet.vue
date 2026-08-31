@@ -161,7 +161,7 @@ onUnmounted(() => {
 
         <!-- Input -->
         <ChatInput
-          :chapter-count="activeBook?.chapters.length ?? 0"
+          :anchor-chapter="chapterIndex + 1"
           v-model:speech-mode="speechMode"
           @send="onSend"
         />

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{ chapterCount: number; speechMode: boolean }>()
+// anchorChapter = N of the chat's context bound (chapters 1…N), not the book's chapter count
+const props = defineProps<{ anchorChapter: number; speechMode: boolean }>()
 const emit = defineEmits<{
   send: [text: string, speechMode: boolean]
   'update:speechMode': [value: boolean]
@@ -63,7 +64,7 @@ function onSend() {
     <input
       v-model="draft"
       type="text"
-      :placeholder="`Frage zu Kapitel 1–${props.chapterCount} …`"
+      :placeholder="`Frage zu Kapitel 1–${props.anchorChapter} …`"
       style="
         flex: 1;
         background: var(--color-panel);
