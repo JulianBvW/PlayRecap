@@ -156,7 +156,7 @@ Because the instruction is a per-message prefix, mode can change message-to-mess
 
 ### 8.2 Message assembly (contract)
 For a chat anchored at chapter N of book B, each request is:
-1. **System message:** role + book identity (`title`, `author`); **answer-language rule** (answer in B's `language`; if `"auto"`, match the language of the provided summaries); **spoiler rule** (knowledge ends at chapter N; never reveal later events); then the **context**: the `seriesRecap` bullets (labeled as previous-book recap) followed by chapter summaries 1…N (each with its number, title, and bullets).
+1. **System message:** role + book identity (`title`, `author`); **answer-language rule** (answer in B's `language`; if `"auto"`, match the language of the provided summaries; **in speech mode the answer is always English — see §8.4**); **spoiler rule** (knowledge ends at chapter N; never reveal later events); then the **context**: the `seriesRecap` bullets (labeled as previous-book recap) followed by chapter summaries 1…N (each with its number, title, and bullets).
 2. **Conversation history:** the in-memory user/assistant turns for this chat.
 3. **New user message:** the mode-prefix (§8.1) + the user's text (or the shortcut's prompt).
 
@@ -170,8 +170,11 @@ The answer's **language is governed by the system rule**, not by the (German) UI
 
 ### 8.4 TTS provider & voice
 - TTS uses **Mistral Voxtral TTS** via the audio endpoint.
-- The **voice/language must follow the book's `language`** (German books read by a German voice, English by English) — not the UI language. If `language` is `"auto"`, **default the TTS voice to German** (the primary use case).
-- **Open implementation item:** the default Voxtral voices mispronounce German. Resolution order: (a) use a `language`/locale parameter if the endpoint supports forcing German pronunciation; otherwise (b) **voice cloning** (a German voice sample; optionally the book's own narrator, personal use only). This must be settled during implementation.
+- **Decided: speech-mode answers are generated in English, and the voice is fixed to `gb_oliver_neutral`.** Mistral offers no German preset voice — `GET /v1/audio/voices?type=preset` returns 30 voices, all `en_us` / `en_gb` / `fr_fr` (reproduce with `Generator/list_voices.sh`). Since a German answer in an English voice sounds broken, the *answer language* is what gives way: with speech mode on, `buildSystemPrompt` overrides the book's `language` with an English rule (and instructs the model to keep proper nouns untranslated). Text and voice then match. The user still asks in German.
+- This applies **only to the speech-mode toggle**. Reading answers (§8.1, toggle off) keep following the book's `language`.
+- The manual read-aloud control stays available on *every* answer (§9.6), so an older German markdown answer can still be read by the English voice. Accepted edge case, not special-cased.
+- **Still open:** a genuinely German voice is only reachable via **voice cloning** (`POST /v1/audio/voices` with an audio sample; the book's own narrator, personal use only). Tracked in the root `TODO.md`, not blocking.
+- The endpoint documents **"keep prompts under 300 words for best results"**, so a long answer is split at sentence boundaries into blocks of at most 280 words (`splitForTTS`) and played back-to-back. Blocks are cut as large as allowed: Voxtral sets prosody per request, so many small blocks would sound chopped up.
 - Generated audio is **ephemeral** (not cached) — re-listening regenerates it and **requires network** (no offline audio replay).
 
 ---
@@ -205,7 +208,7 @@ The answer's **language is governed by the system rule**, not by the (German) UI
 ## 12. Cross-cutting requirements
 
 - **Spoiler-safety is non-negotiable:** never send chapter content beyond the chat's anchor N; rail navigation also avoids revealing the next chapter's heading.
-- **Answer + voice language follow the book**, not the UI (UI is German).
+- **Answer + voice language follow the book**, not the UI (UI is German) — except in speech mode, where the answer is always English because no German voice exists (§8.4).
 - **No AI output persisted; chats and audio are session-only.**
 - **`lastOpenedAt` is the only frontend-written data;** everything else in `books` comes from the imported library.
 
@@ -213,7 +216,7 @@ The answer's **language is governed by the system rule**, not by the (German) UI
 
 ## 13. Open items to resolve during implementation
 
-1. **German TTS voice** for Voxtral (language param vs. voice cloning) — §8.4.
+1. ~~**German TTS voice** for Voxtral~~ — **settled** (§8.4): no German preset exists, so speech mode answers in English with a fixed English voice. Voice cloning remains a possible follow-up, tracked in the root `TODO.md`.
 2. Exact `library.json` `version` handling / migration policy if the schema evolves.
 3. Behavior when an imported file references a book `id` that already exists during **Add Books** (defined as upsert) vs. any conflict signaling to the user.
 4. **Prompt wording is authored separately.** The exact system prompt, the four shortcut prompt strings, and the speech/markdown mode prefixes are finalized in a dedicated prompt-building pass — treat the glosses in §7.4 / §8.1 as placeholders, not final copy.

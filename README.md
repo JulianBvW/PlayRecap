@@ -12,7 +12,7 @@ German UI. One book at a time. No backend.
 - **Scroll-spy highlight** — a sliding tinted block marks the chapter currently at the top of the viewport.
 - **Chapter rail** — an iOS-Contacts-style right-edge index for fast jumping in long books. Rail jumps land spoiler-safely (target chapter bottom aligns to screen bottom so the next chapter title stays off-screen).
 - **Per-chapter chat** — context-bounded to chapters 1…N (the chapter you opened it from). The model never sees later chapters, so it cannot spoil.
-- **Speech mode** — toggle the mic to get spoken-prose answers instead of markdown; answers auto-play via Mistral Voxtral TTS. Every answer has a manual read-aloud button regardless.
+- **Speech mode** — toggle the mic to get spoken-prose answers instead of markdown; answers auto-play via Mistral Voxtral TTS. Speech-mode answers are generated **in English** because Voxtral has no German voice (see below). Every answer has a manual read-aloud button regardless.
 - **Series recap** — for sequels, a "previously in the series" sheet feeds the LLM prior-book context and lets you read a bullet recap yourself.
 - **Installable PWA** — works offline for reading (summaries are in IndexedDB); AI features require network.
 
@@ -130,6 +130,6 @@ A placeholder `favicon.ico` is included. Before shipping, add proper PNG icons t
 
 ## Open items
 
-- **German TTS voice** — Voxtral's default voices mispronounce German. Resolution: either a language/locale parameter on the audio endpoint, or voice cloning with a German sample (personal use).
+- **German TTS voice** — *settled:* Mistral offers no German preset voice at all (`GET /v1/audio/voices?type=preset` → 30 voices, all `en_us` / `en_gb` / `fr_fr`; reproduce with `Generator/list_voices.sh`). Speech mode therefore answers in English with a fixed English voice, so text and voice match. A real German voice would require voice cloning — tracked in the root `TODO.md`.
 - **Prompt wording** — system prompt, shortcut prompts, and speech/markdown mode prefixes are placeholders until finalized in a dedicated prompt-building pass.
 - **PWA icons** — see above.
