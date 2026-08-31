@@ -50,6 +50,27 @@ describe('buildSystemPrompt', () => {
     )
   })
 
+  it('speech mode → answers in English regardless of book language', () => {
+    // Voxtral has no German preset voice, so speech-mode answers are always English
+    for (const language of ['de', 'auto'] as const) {
+      const result = buildSystemPrompt(makeBook({ language }), 0, true)
+      expect(result).toContain('Answer in English')
+      expect(result).not.toContain('immer auf Deutsch')
+      expect(result).not.toContain('Sprache, in der die Zusammenfassungen')
+    }
+  })
+
+  it('speech mode → instructs the model to keep proper nouns untranslated', () => {
+    expect(buildSystemPrompt(makeBook({ language: 'de' }), 0, true)).toContain('proper noun')
+  })
+
+  it('markdown mode → book language still governs the answer language', () => {
+    expect(buildSystemPrompt(makeBook({ language: 'de' }), 0, false)).toContain('immer auf Deutsch')
+    expect(buildSystemPrompt(makeBook({ language: 'de' }), 0, false)).not.toContain(
+      'Answer in English',
+    )
+  })
+
   it('markdown mode → system prompt contains Markdown instruction', () => {
     expect(buildSystemPrompt(makeBook(), 0, false)).toContain('Markdown')
   })

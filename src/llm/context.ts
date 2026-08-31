@@ -11,7 +11,18 @@ export function buildSystemPrompt(book: BookRecord, anchorIndex: number, speechM
 
   lines.push('Du bist ein hilfreicher Assistent für Hörbücher.')
 
-  if (book.language === 'de') {
+  // Speech mode always answers in English, whatever book.language says: Voxtral has
+  // no German preset voice (GET /v1/audio/voices?type=preset → 30 voices, all
+  // en_us / en_gb / fr_fr), and German text in an English voice sounds broken. Letting
+  // the answer language give way is what makes text and voice match.
+  // See Generator/list_voices.sh and ref/PlayRecap-Feature-Spec.md §8.4.
+  if (speechMode) {
+    lines.push(
+      'Answer in English, even when the question and the chapter summaries are in German. ' +
+        'Keep every proper noun — characters, places, ships, organisations — exactly as it ' +
+        'appears in the summaries; never translate or invent names.',
+    )
+  } else if (book.language === 'de') {
     lines.push('Antworte immer auf Deutsch.')
   } else if (book.language === 'en') {
     lines.push('Always answer in English.')
