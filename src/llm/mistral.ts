@@ -1,7 +1,7 @@
 import type { MistralMessage } from './context'
 
 const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions'
-const MISTRAL_MODEL = 'mistral-small-latest'
+const MISTRAL_MODEL = 'mistral-large-latest'
 
 export async function* streamChat(
   messages: MistralMessage[],
