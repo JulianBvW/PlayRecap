@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useBooksStore } from '@/stores/books'
 import { useSettingsStore } from '@/stores/settings'
+import { DEFAULT_MODEL } from '@/llm/mistral'
 import { validateLibraryFile } from '@/utils/validateLibrary'
 import BottomSheet from '@/components/BottomSheet.vue'
 
@@ -13,6 +14,11 @@ const settingsStore = useSettingsStore()
 
 const apiKeyDraft = ref(settingsStore.apiKey)
 watch(() => settingsStore.apiKey, (val) => { apiKeyDraft.value = val }, { immediate: true })
+
+// Bound to modelInput, not to the resolved model: an empty box has to stay empty so
+// the placeholder can show what the default is.
+const modelDraft = ref(settingsStore.modelInput)
+watch(() => settingsStore.modelInput, (val) => { modelDraft.value = val }, { immediate: true })
 
 const fileMode = ref<'upsert' | 'import'>('upsert')
 const fileError = ref('')
@@ -165,6 +171,37 @@ async function doConfirmClear() {
             margin: 6px 2px 0;
           "
         >Wird nur lokal auf diesem Gerät gespeichert.</p>
+      </div>
+
+      <div style="padding: 8px 20px 4px;">
+        <input
+          v-model="modelDraft"
+          type="text"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          :placeholder="DEFAULT_MODEL"
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--color-panel);
+            border: 1px solid var(--color-line);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-family: var(--font-serif);
+            color: var(--color-ink);
+            outline: none;
+          "
+          @blur="settingsStore.setModel(modelDraft)"
+        />
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-faint);
+            margin: 6px 2px 0;
+          "
+        >Chat-Modell. Leer = {{ DEFAULT_MODEL }}. Gilt nicht für die Vorlese-Stimme.</p>
       </div>
 
       <!-- Data section -->

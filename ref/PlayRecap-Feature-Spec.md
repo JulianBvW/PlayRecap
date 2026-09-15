@@ -27,7 +27,11 @@ This document describes **features, data, and behavior** — *what* the app does
 - **Mistral access via `fetch`** (chat streaming over SSE; TTS via the audio endpoint) — no SDK dependency.
 - **Persistence via IndexedDB**, using a wrapper (e.g. Dexie).
 - **PWA**: installable to home screen, offline-capable for reading, `vite-plugin-pwa` + `navigator.storage.persist()`.
-- **Model: `mistral-large-latest`** for all text generation.
+- **Model: configurable in Settings**, default `ministral-14b-latest`. Which models a key
+  may call depends on the Mistral subscription tier and changes without warning — a
+  free-tier key cannot reach `mistral-large-*` at all, so the default is the largest
+  general-purpose model such a key answers with. `Generator/list_models.sh` probes a key
+  and reports what it can actually call.
 
 ---
 
@@ -189,9 +193,12 @@ The answer's **language is governed by the system rule**, not by the (German) UI
 ## 10. LLM integration details
 
 - **Provider/transport:** Mistral REST API directly from the browser via `fetch`. Chat uses streaming (SSE); render tokens as they arrive.
-- **Model:** `mistral-large-latest`.
+- **Model:** from `settings`, default `ministral-14b-latest` (see §2). An empty field means
+  the default. The TTS model is separate and not affected by this setting.
 - **Auth:** API key from `settings`. If no key is set, AI actions prompt the user to add one in Settings (reading still works without a key).
-- **Errors:** surface network/API errors in the chat without losing the conversation; reading the library is unaffected by AI/network failures.
+- **Errors:** surface network/API errors in the chat without losing the conversation; the
+  message names the model used, because a mistyped model id and a tier refusal are both
+  bare 4xx responses and otherwise indistinguishable; reading the library is unaffected by AI/network failures.
 - **Privacy:** the key never leaves the device except in the Authorization header to Mistral; it is excluded from Export (§5).
 
 ---

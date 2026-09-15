@@ -1,11 +1,19 @@
 import type { MistralMessage } from './context'
 
 const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions'
-const MISTRAL_MODEL = 'mistral-large-latest'
+
+// Which models a key may call is a property of the Mistral account, not of this app:
+// a free-tier key cannot reach mistral-large-latest at all, and what is included
+// changes without warning. The model is therefore configurable in the settings (see
+// stores/settings.ts) and this is only the fallback. ministral-14b-latest is the
+// largest general-purpose model a free-tier key answers with — measured with
+// Generator/list_models.sh, which probes every listed model with a real request.
+export const DEFAULT_MODEL = 'ministral-14b-latest'
 
 export async function* streamChat(
   messages: MistralMessage[],
   apiKey: string,
+  model: string,
   signal?: AbortSignal,
 ): AsyncGenerator<string> {
   const response = await fetch(MISTRAL_ENDPOINT, {
@@ -14,7 +22,7 @@ export async function* streamChat(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model: MISTRAL_MODEL, messages, stream: true }),
+    body: JSON.stringify({ model, messages, stream: true }),
     signal,
   })
 
@@ -25,7 +33,9 @@ export async function* streamChat(
       const msg = body?.detail ?? body?.message ?? body?.error?.message
       if (msg) detail = `${response.status}: ${msg}`
     } catch { /* body not JSON */ }
-    throw new Error(detail)
+    // Name the model: a typo in the settings field and a model the subscription tier
+    // does not include both arrive as a bare 4xx and are otherwise indistinguishable.
+    throw new Error(`${detail} (Modell: ${model})`)
   }
 
   const reader = response.body!.getReader()

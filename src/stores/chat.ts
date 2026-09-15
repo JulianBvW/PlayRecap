@@ -81,7 +81,12 @@ export const useChatStore = defineStore('chat', () => {
       const messages = buildMessages(history, text, systemPrompt)
 
       updateLastMessage(bookId, chapterIndex, { status: 'streaming' })
-      for await (const token of streamChat(messages, settingsStore.apiKey, signal)) {
+      for await (const token of streamChat(
+        messages,
+        settingsStore.apiKey,
+        settingsStore.model,
+        signal,
+      )) {
         if (signal?.aborted) break
         const thread = getThread(bookId, chapterIndex)
         const last = thread[thread.length - 1]

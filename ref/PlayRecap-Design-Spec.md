@@ -206,6 +206,7 @@ Opened from the gear in the Book switcher sheet. Same sheet chrome (grab handle,
 - Title **"Einstellungen"**.
 - Section **"LLM-VERBINDUNG"** (group label: 11 / 700, uppercase, `.16em`, `faint`):
   - **API key** field — full-width input, `type=password`, placeholder `"API-Schlüssel einfügen"`, `panel` background, 1px `line`, radius 12. Helper text below in `faint`: `"Wird nur lokal auf diesem Gerät gespeichert."`
+  - **Chat model** field — same treatment as the API key field (`type=text`, `panel` bg, 1px `line`, radius 12), sitting directly below it. Its placeholder is the default model id, so an empty field reads as "using the default" rather than as unset. Helper text below in `faint`: `"Chat-Modell. Leer = <default>. Gilt nicht für die Vorlese-Stimme."` — the last sentence matters because TTS runs on a different model behind the same key.
 - Section **"DATEN"** — list rows, each = a rounded icon chip (`accentSoft` bg / `accent` icon) + label:
   - **"Bücher hinzufügen"** (book-with-plus icon) — entry to the add-audiobooks flow; sits at the **top** of the section.
   - **"Daten importieren"** (file-down icon)

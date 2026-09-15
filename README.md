@@ -27,7 +27,7 @@ German UI. One book at a time. No backend.
 | State | Pinia |
 | Persistence | IndexedDB via Dexie |
 | PWA | `vite-plugin-pwa` |
-| LLM / TTS | Mistral API (`mistral-large-latest`, Voxtral) via `fetch` — no SDK |
+| LLM / TTS | Mistral API (chat model configurable, default `ministral-14b-latest`; Voxtral for TTS) via `fetch` — no SDK |
 | Type checking | TypeScript + `vue-tsc` |
 | Tests | Vitest + `@vue/test-utils` |
 | Linting | oxlint + ESLint + Prettier |
