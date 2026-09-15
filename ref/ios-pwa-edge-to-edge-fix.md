@@ -7,6 +7,7 @@
 ## TL;DR — The Fix
 
 1. Keep `viewport-fit=cover` and `apple-mobile-web-app-status-bar-style: black-translucent`. Do NOT revert to `default`.
+   `maximum-scale=1.0` sits on the same meta tag for an unrelated reason — see §Input zoom below. Keep both; they do not interact.
 2. **Find and eliminate `height: 100%` and `100dvh` on `html`, `body`, or the root app container.** Use `height: 100vh`. This is almost certainly the root cause (details below).
 3. Render the full-bleed background (the wave layer) as `position: fixed; inset: 0;` with an **opaque `background-color`** at its base. Semi-transparent layers stacked on "nothing" let the native fill show through.
 4. Make `html`/`body` **non-scrolling** (`overflow: hidden`). Move all scrolling into an inner container (`position: fixed; inset: 0; overflow-y: auto;`). This removes the overscroll/rubber-band region — the only place where the native body-color fill is genuinely uncoverable.
@@ -29,7 +30,8 @@ The reason "fixed elements stop short of the safe area" in various framework bug
 This is a documented, widely-reproduced WebKit gotcha. With `viewport-fit=cover` + `black-translucent` active, the value used for full height on the root elements matters enormously:
 
 ```css
-html, body {
+html,
+body {
   /* ❌ height: 100%;
      Silently BREAKS viewport-fit=cover entirely. Content never extends
      behind the notch/home indicator. Safari falls back to the non-cover
@@ -64,24 +66,27 @@ html, body {
 
 ```html
 <!-- index.html -->
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+/>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 ```
 
 ```css
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
-  height: 100vh;            /* NOT 100% / 100dvh */
-  overflow: hidden;         /* body never scrolls */
+  height: 100vh; /* NOT 100% / 100dvh */
+  overflow: hidden; /* body never scrolls */
   overscroll-behavior: none;
 }
 
 /* Full-bleed background layer — spans the entire physical screen */
 .app-background {
-  position: fixed;          /* fixed = relative to the visual viewport,
+  position: fixed; /* fixed = relative to the visual viewport,
                                which with viewport-fit=cover IS the full
                                screen incl. both safe areas */
   inset: 0;
@@ -115,7 +120,7 @@ html, body {
 
 **Opaque base color on the background layer.** The current wave SVGs have ~0.35 opacity each. Stacked on a container with no background, the native fill shows through the gaps. With an opaque cream base under them, nothing native is ever visible — including under the home indicator. This also dissolves the "the native fill can only be one flat color, but our wave bottom is a gradient" problem: the real wave SVG is now what's painted there.
 
-**Non-scrolling body + inner scroll container.** When the document itself scrolls, rubber-band overscroll reveals the area *beyond* the document — and that region shows the native UIScrollView background (body color). That is the one region opaque content cannot cover, because there's no content there. Freezing the body and scrolling an inner `overflow-y: auto` container means the bounce happens inside the container, over our own fixed background. `overscroll-behavior: none` alone is NOT sufficient on iOS standalone; the structural fix is required.
+**Non-scrolling body + inner scroll container.** When the document itself scrolls, rubber-band overscroll reveals the area _beyond_ the document — and that region shows the native UIScrollView background (body color). That is the one region opaque content cannot cover, because there's no content there. Freezing the body and scrolling an inner `overflow-y: auto` container means the bounce happens inside the container, over our own fixed background. `overscroll-behavior: none` alone is NOT sufficient on iOS standalone; the structural fix is required.
 
 **Delete the body-color machinery.** With the above in place, `document.body.style.backgroundColor` is never visible anywhere. Remove: the blended-color computation, the `router.beforeEach` hook that updates it, and any related state. Body can keep a static cream as a harmless fallback.
 
@@ -135,12 +140,12 @@ Run these in order. Each isolates one failure mode.
 2. **Verify insets resolve.** Add a temporary debug overlay printing the measured insets (use a DOM probe, not a CSS variable bridge — the variable bridge has known stale-value WebKit bugs):
    ```js
    function measureEnv(prop) {
-     const el = document.createElement('div');
-     el.style.cssText = `position:fixed;top:0;left:0;width:0;height:env(${prop},0px);visibility:hidden;pointer-events:none`;
-     document.body.appendChild(el);
-     const v = el.offsetHeight;
-     el.remove();
-     return v;
+     const el = document.createElement('div')
+     el.style.cssText = `position:fixed;top:0;left:0;width:0;height:env(${prop},0px);visibility:hidden;pointer-events:none`
+     document.body.appendChild(el)
+     const v = el.offsetHeight
+     el.remove()
+     return v
    }
    // Expect on a Face ID iPhone in portrait: top 44–62, bottom 34, left/right 0
    ```
@@ -151,12 +156,12 @@ Run these in order. Each isolates one failure mode.
    ```js
    // Force WebKit to recalculate env() values without device rotation
    if (window.navigator.standalone) {
-     const meta = document.querySelector('meta[name="viewport"]');
-     const original = meta.getAttribute('content');
-     meta.setAttribute('content', original.replace('viewport-fit=cover', 'viewport-fit=auto'));
+     const meta = document.querySelector('meta[name="viewport"]')
+     const original = meta.getAttribute('content')
+     meta.setAttribute('content', original.replace('viewport-fit=cover', 'viewport-fit=auto'))
      requestAnimationFrame(() => {
-       meta.setAttribute('content', original);
-     });
+       meta.setAttribute('content', original)
+     })
    }
    ```
    (Only needed if you read insets in JS or see cold-start layout glitches; the pure-CSS layout above usually doesn't need it.)
@@ -184,6 +189,17 @@ Run these in order. Each isolates one failure mode.
 - [ ] All interactive UI (buttons, nav) sits inside the safe areas via `env()` padding.
 - [ ] `body.backgroundColor` JS machinery removed; no `router.beforeEach` color hooks remain.
 - [ ] No `height: 100%` / `dvh` on `html`, `body`, or root container (incl. Tailwind `h-full`, `h-dvh`).
+- [ ] Tapping a text field does not zoom the page in (`maximum-scale=1.0` present).
+
+## Input zoom on focus (`maximum-scale=1.0`)
+
+Separate problem, same meta tag. Safari zooms the page in when a focused text field
+renders below **16px**.
+
+`maximum-scale=1.0` suppresses that auto-zoom while iOS still permits manual pinch-zoom,
+so the typographic scale stays as specified. `user-scalable=no` is deliberately **not**
+set — that one really would disable pinch-zoom. The accepted cost: `maximum-scale`
+does cap pinch-zoom on Android browsers, which is a real trade for an iPhone-first PWA.
 
 ## References
 
